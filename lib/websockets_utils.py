@@ -5,9 +5,12 @@ import json
 import gzip
 import config
 import proto.protocol_pb2 as protocol
-import proto.response_pb2 as response
+import proto.notify_pb2 as notify
 import proto.astro_pb2 as astro
 import proto.system_pb2 as system
+import proto.camera_pb2 as camera
+# in notify
+import proto.base_pb2 as base__pb2
 
 import lib.my_logger as my_logger
 
@@ -26,12 +29,15 @@ class WebSocketClient:
         self.uri = uri
         self.message = message
         self.command = command
+        self.target_name = ""
         self.type_id = type_id
         self.module_id = module_id
         self.client_id = client_id
         self.ping_interval = ping_interval
         self.ping_task = None
         self.receive_task = None
+        self.abort_tasks = None
+        self.abort_timeout = 90
         self.stop_task = asyncio.Event()
         self.wait_pong = False
 
@@ -48,8 +54,9 @@ class WebSocketClient:
 
         try:
             count = 0
+            self.abort_timeout = timeout
             await asyncio.sleep(0.02)
-            while not self.stop_task.is_set() and count < timeout:
+            while not self.stop_task.is_set() and count < self.abort_timeout:
                 await asyncio.sleep(1)
                 count += 1
         except Exception as e:
@@ -124,42 +131,70 @@ class WebSocketClient:
                             if (message =="pong"):
                                  self.wait_pong = False
                         elif isinstance(message, bytes):
+                            print("------------------")
                             print("Receiving...  data")
-                            WsPacket_message = protocol.WsPacket()
+                            WsPacket_message = base__pb2.WsPacket()
                             WsPacket_message.ParseFromString(message)
-                            my_logger.debug("receive cmd >>", WsPacket_message.cmd)
-                            my_logger.debug("receive type >>", WsPacket_message.type)
+                            my_logger.debug(f"receive cmd >> {WsPacket_message.cmd}")
+                            try:
+                                enum_name = protocol.AstroCMD.Name(WsPacket_message.cmd)
+                                my_logger.debug(f">> {enum_name}")
+                            except ValueError:
+                            # Ignore the error and continue execution
+                                pass
+                            my_logger.debug(f"msg data len is >> {len(WsPacket_message.data)}")
+                            print("------------------")
 
                             # CMD_NOTIFY_WS_HOST_SLAVE_MODE = 15223; // Leader/follower mode notification
-                            if (WsPacket_message.cmd==astro.CMD_NOTIFY_WS_HOST_SLAVE_MODE):
-                                ResNotifyHostSlaveMode_message = response.ResNotifyHostSlaveMode()
+                            if (WsPacket_message.cmd==protocol.CMD_NOTIFY_WS_HOST_SLAVE_MODE):
+                                ResNotifyHostSlaveMode_message = notify.ResNotifyHostSlaveMode()
                                 ResNotifyHostSlaveMode_message.ParseFromString(WsPacket_message.data)
 
                                 print("Decoding CMD_NOTIFY_WS_HOST_SLAVE_MODE")
-                                my_logger.debug("receive Host/Slave data >>", ResNotifyHostSlaveMode_message.mode)
+                                my_logger.debug(f"receive Host/Slave data >> {ResNotifyHostSlaveMode_message.mode}")
 
                                 # Host = 0 Slave = 1
                                 if (ResNotifyHostSlaveMode_message.mode == 1):
                                     my_logger.debug("SLAVE_MODE >> EXIT")
-                                    # Signal the ping and receive functions to stop
-                                    self.stop_task.set()
+                                    # Signal the abort_tasks_timeout functions to stop in 15 s
+                                    if (self.abort_timeout > 15 ):
+                                        self.abort_timeout = 15
                                     self.result = "Error SLAVE MODE"
-                                    await asyncio.sleep(5)
+                                    await asyncio.sleep(1)
                                     print("Error SLAVE MODE detected")
                                 else:
                                     print("Continue Decoding CMD_NOTIFY_WS_HOST_SLAVE_MODE")
 
+                            # CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE = 10039; // // Get the working status of the whole machine
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE")
+                                my_logger.debug(f"receive code data >> {ComResponse_message.code}")
+
+                                # NO_ERROR = 0; // No Error
+                                if (ComResponse_message.code != protocol.NO_ERROR):
+                                    my_logger.debug(f"Error GET_SYSTEM_WORKING_STATE {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = "ok"
+                                    await asyncio.sleep(5)
+                                    print("Error CAMERA_TELE_GET_SYSTEM_WORKING_STATE CODE " + ComResponse_message.code)
+                                else:
+                                    print("Continue OK CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE")
+
                             # CMD_NOTIFY_STATE_ASTRO_CALIBRATION = 15210; // Astronomical calibration status
-                            if (WsPacket_message.cmd==astro.CMD_NOTIFY_STATE_ASTRO_CALIBRATION):
-                                ResNotifyStateAstroGoto_message = response.ResNotifyStateAstroCalibration()
-                                ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
+                            elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_STATE_ASTRO_CALIBRATION):
+                                ResNotifyStateAstroCalibration_message = notify.ResNotifyStateAstroCalibration()
+                                ResNotifyStateAstroCalibration_message.ParseFromString(WsPacket_message.data)
 
                                 print("Decoding CMD_NOTIFY_STATE_ASTRO_CALIBRATION")
-                                my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
-                                my_logger.debug("receive notification times >>", ResNotifyStateAstroGoto_message.plate_solving_times)
+                                my_logger.debug(f"receive notification data >> {ResNotifyStateAstroCalibration_message.state}")
+                                my_logger.debug(f"receive notification times >> {ResNotifyStateAstroCalibration_message.plate_solving_times}")
 
                                 # ASTRO_STATE_IDLE = 0; // Idle state Only when Success
-                                if (ResNotifyStateAstroGoto_message.state == response.ASTRO_STATE_IDLE):
+                                if (ResNotifyStateAstroCalibration_message.state == notify.ASTRO_STATE_IDLE):
                                     my_logger.debug("ASTRO CALIBRATION OK >> EXIT")
                                     # Signal the ping and receive functions to stop
                                     self.stop_task.set()
@@ -170,117 +205,138 @@ class WebSocketClient:
                                     print("Continue Decoding CMD_NOTIFY_STATE_ASTRO_CALIBRATION")
 
                             # CMD_NOTIFY_STATE_ASTRO_GOTO = 15211; // Astronomical GOTO status
-                            elif (WsPacket_message.cmd==astro.CMD_NOTIFY_STATE_ASTRO_GOTO):
-                                ResNotifyStateAstroGoto_message = response.ResNotifyStateAstroGoto()
+                            elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_STATE_ASTRO_GOTO):
+                                ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
                                 ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
 
                                 print("Decoding CMD_NOTIFY_STATE_ASTRO_GOTO")
-                                my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
+                                my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
 
                             # CMD_NOTIFY_STATE_ASTRO_TRACKING = 15212; // Astronomical tracking status
-                            elif (WsPacket_message.cmd==astro.CMD_NOTIFY_STATE_ASTRO_TRACKING):
-                                ResNotifyStateAstroGoto_message = response.ResNotifyStateAstroTracking()
+                            elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_STATE_ASTRO_TRACKING):
+                                ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroTracking()
                                 ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
 
                                 print("Decoding CMD_NOTIFY_STATE_ASTRO_TRACKING")
-                                my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
-                                my_logger.debug("receive notification target_name >>", ResNotifyStateAstroGoto_message.target_name)
+                                my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
+                                my_logger.debug(f"receive notification target_name >> {ResNotifyStateAstroGoto_message.target_name}")
 
-                                # ASTRO_STATE_RUNNING = 1; // Running
-                                if (ResNotifyStateAstroGoto_message.state == response.ASTRO_STATE_RUNNING):
+                                # ASTRO_STATE_RUNNING = 1; // Running 
+                                # Can be sending during CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE
+                                # DSO or STELLAR
+                                if ((self.command == protocol.CMD_ASTRO_START_GOTO_DSO) and ResNotifyStateAstroGoto_message.state == notify.ASTRO_STATE_RUNNING and ResNotifyStateAstroGoto_message.target_name == self.target_name):
+                                    my_logger.debug("ASTRO GOTO : SAME CMD AND TARGET")
                                     my_logger.debug("ASTRO GOTO OK TRACKING >> EXIT")
                                     # Signal the ping and receive functions to stop
                                     self.stop_task.set()
                                     self.result = "ok"
                                     await asyncio.sleep(5)
-                                    print("Success ASTRO GOTO TRACKING START")
+                                    print("Success ASTRO DSO GOTO TRACKING START")
+
+                                if ((self.command == protocol.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM) and ResNotifyStateAstroGoto_message.state == notify.ASTRO_STATE_RUNNING and ResNotifyStateAstroGoto_message.target_name == self.target_name):
+                                    my_logger.debug("ASTRO GOTO : SAME CMD AND TARGET")
+                                    my_logger.debug("ASTRO GOTO OK TRACKING >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = "ok"
+                                    await asyncio.sleep(5)
+                                    print("Success ASTRO SOLAR GOTO TRACKING START")
 
                             # CMD_ASTRO_START_CALIBRATION = 11000; // Start calibration
-                            elif (WsPacket_message.cmd==astro.CMD_ASTRO_START_CALIBRATION):
-                                ComResponse = response.ComResponse()
+                            elif (WsPacket_message.cmd==protocol.CMD_ASTRO_START_CALIBRATION):
+                                ComResponse = base__pb2.ComResponse()
                                 ComResponse.ParseFromString(WsPacket_message.data)
 
                                 print("Decoding CMD_ASTRO_START_CALIBRATION")
-                                my_logger.debug("receive code data >>", ComResponse.code)
+                                my_logger.debug(f"receive code data >> {ComResponse.code}")
 
                                 # CODE_ASTRO_CALIBRATION_FAILED = -11504; // Calibration failed
                                 if (ComResponse.code == -11504):
                                     my_logger.debug("Error CALIBRATION >> EXIT")
                                     # Signal the ping and receive functions to stop
                                     self.stop_task.set()
-                                    self.result = response.CODE_ASTRO_CALIBRATION_FAILED
+                                    self.result = protocol.CODE_ASTRO_CALIBRATION_FAILED
                                     await asyncio.sleep(5)
                                     print("Error CALIBRATION CODE_ASTRO_CALIBRATION_FAILED")
 
                             # CMD_SYSTEM_SET_TIME = 13000; // Set the system time
-                            elif (WsPacket_message.cmd==astro.CMD_SYSTEM_SET_TIME):
-                                ComResponse = response.ComResponse()
+                            elif (WsPacket_message.cmd==protocol.CMD_SYSTEM_SET_TIME):
+                                ComResponse = base__pb2.ComResponse()
                                 ComResponse.ParseFromString(WsPacket_message.data)
 
                                 print("Decoding CMD_SYSTEM_SET_TIME")
-                                my_logger.debug("receive code data >>", ComResponse.code)
+                                my_logger.debug(f"receive code data >> {ComResponse.code}")
 
                                 # Signal the ping and receive functions to stop
                                 self.stop_task.set()
                                 self.result = ComResponse.code
                                 await asyncio.sleep(5)
-                                if (ComResponse.code == response.CODE_SYSTEM_SET_TIME_FAILED):
+                                if (ComResponse.code == protocol.CODE_SYSTEM_SET_TIME_FAILED):
                                     print("Error CMD_SYSTEM_SET_TIME")
                                 else:
                                     print("OK CMD_SYSTEM_SET_TIME")
 
                             # CMD_SYSTEM_SET_TIME_ZONE = 13001; // Set the time zone
-                            elif (WsPacket_message.cmd==astro.CMD_SYSTEM_SET_TIME_ZONE):
-                                ComResponse = response.ComResponse()
+                            elif (WsPacket_message.cmd==protocol.CMD_SYSTEM_SET_TIME_ZONE):
+                                ComResponse = base__pb2.ComResponse()
                                 ComResponse.ParseFromString(WsPacket_message.data)
 
                                 print("Decoding CMD_SYSTEM_SET_TIME_ZONE")
-                                my_logger.debug("receive code data >>", ComResponse.code)
+                                my_logger.debug(f"receive code data >> {ComResponse.code}")
 
                                 # Signal the ping and receive functions to stop
                                 self.stop_task.set()
                                 self.result = ComResponse.code
                                 await asyncio.sleep(5)
-                                if (ComResponse.code == response.CODE_SYSTEM_SET_TIMEZONE_FAILED):
+                                if (ComResponse.code == protocol.CODE_SYSTEM_SET_TIMEZONE_FAILED):
                                     print("Error CMD_SYSTEM_SET_TIME_ZONE")
                                 else:
                                     print("OK CMD_SYSTEM_SET_TIME_ZONE")
 
-                            elif (WsPacket_message.cmd != self.command):
-                                if( WsPacket_message.type == 2):
-                                    print("Decoding Other Notification Frame")
-                                    ResNotifyStateAstroGoto_message = response.ResNotifyStateAstroGoto()
-                                    ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
-
-                                    my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
-                                if( WsPacket_message.type == 3):
-                                    print("Decoding Other Notification Frame")
-                                    ResNotifyStateAstroGoto_message = response.ResNotifyStateAstroGoto()
-                                    ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
-
-                                    my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
-                            else:
-                                print("Decoding CMD_ASTRO_START_GOTO_DSO")
-                                ComResponse_message = response.ComResponse()
+                            # CMD_ASTRO_START_GOTO_DSO = 11002; // Start GOTO Deep Space Object
+                            elif (WsPacket_message.cmd==protocol.CMD_ASTRO_START_GOTO_DSO):
+                                ComResponse_message = base__pb2.ComResponse()
                                 ComResponse_message.ParseFromString(WsPacket_message.data)
 
-                                my_logger.debug("receive type >>", WsPacket_message.type)
-                                my_logger.debug("receive data >>", ComResponse_message.code)
+                                print("Decoding CMD_ASTRO_START_GOTO_DSO")
+                                my_logger.debug(f"receive data >> {ComResponse_message.code}")
 
-                                if (ComResponse_message.code != response.NO_ERROR):
+                                if (ComResponse_message.code != protocol.NO_ERROR):
                                     my_logger.debug(f"Error GOTO {ComResponse_message.code} >> EXIT")
                                     # Signal the ping and receive functions to stop
                                     self.stop_task.set()
                                     self.result = ComResponse_message.code
                                     await asyncio.sleep(5)
-                                    if (ComResponse_message.code == response.CODE_ASTRO_GOTO_FAILED):
+                                    if (ComResponse_message.code == protocol.CODE_ASTRO_GOTO_FAILED):
                                         print("Error GOTO CODE_ASTRO_GOTO_FAILED")
-                                    elif (ComResponse_message.code == response.CODE_STEP_MOTOR_LIMIT_POSITION_WARNING):
+                                    elif (ComResponse_message.code == protocol.CODE_STEP_MOTOR_LIMIT_POSITION_WARNING):
                                         print("Error GOTO CODE_STEP_MOTOR_LIMIT_POSITION_WARNING")
-                                    elif (ComResponse_message.code == response.CODE_STEP_MOTOR_LIMIT_POSITION_HITTED):
+                                    elif (ComResponse_message.code == protocol.CODE_STEP_MOTOR_LIMIT_POSITION_HITTED):
                                         print("Error GOTO CODE_STEP_MOTOR_LIMIT_POSITION_HITTED")
                                     else:
                                         print("Error GOTO CODE " + ComResponse_message.code)
+                            # Unknown
+                            elif (WsPacket_message.cmd != self.command):
+                                if( WsPacket_message.type == 0):
+                                    print("Get Request Frame")
+                                if( WsPacket_message.type == 1):
+                                    print("Decoding Response Request Frame")
+                                    ComResponse_message = base__pb2.ComResponse()
+                                    ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                    my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                if( WsPacket_message.type == 2):
+                                    print("Decoding Notification Frame")
+                                    ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
+                                    ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
+
+                                    my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
+                                if( WsPacket_message.type == 3):
+                                    print("Decoding Response Notification Frame")
+                                    ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
+                                    ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
+
+                                    my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
                         else:
                             print("Ignoring Unkown Type Frames")
                     else:
@@ -311,13 +367,29 @@ class WebSocketClient:
         major_version = 1
         minor_version = 1
         device_id = 1  # DWARF II
+        self.target_name = ""
 
         if not self.websocket:
             print("Error No WebSocket in send_message")
             return
 
+        Send_TeleGetSystemWorkingState = True
+
+        #CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE
+        WsPacket_messageTeleGetSystemWorkingState = base__pb2.WsPacket()
+        ReqGetSystemWorkingState_message = camera.ReqGetSystemWorkingState()
+        WsPacket_messageTeleGetSystemWorkingState.data = ReqGetSystemWorkingState_message.SerializeToString()
+
+        WsPacket_messageTeleGetSystemWorkingState.major_version = major_version
+        WsPacket_messageTeleGetSystemWorkingState.minor_version = minor_version
+        WsPacket_messageTeleGetSystemWorkingState.device_id = device_id
+        WsPacket_messageTeleGetSystemWorkingState.module_id = 1  # MODULE_TELEPHOTO
+        WsPacket_messageTeleGetSystemWorkingState.cmd = 10039 #CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE
+        WsPacket_messageTeleGetSystemWorkingState.type = 0; #REQUEST
+        WsPacket_messageTeleGetSystemWorkingState.client_id = self.client_id # "0000DAF2-0000-1000-8000-00805F9B34FB"  # ff03aa11-5994-4857-a872-b411e8a3a5e51
+
         # SEND COMMAND
-        WsPacket_message = protocol.WsPacket()
+        WsPacket_message = base__pb2.WsPacket()
         WsPacket_message.data = self.message.SerializeToString()
 
         WsPacket_message.major_version = major_version
@@ -333,11 +405,38 @@ class WebSocketClient:
             # Send Command
             await asyncio.sleep(0.02)
 
-            await self.websocket.send(WsPacket_message.SerializeToString())
-            my_logger.debug("Send cmd >>", WsPacket_message.cmd)
-            my_logger.debug("Send type >>", WsPacket_message.type)
-            my_logger.debug("Send message >>", self.message)
+            if (Send_TeleGetSystemWorkingState):
+                await self.websocket.send(WsPacket_messageTeleGetSystemWorkingState.SerializeToString())
+                print("#----------------#")
+                my_logger.debug(f"Send cmd >> {WsPacket_messageTeleGetSystemWorkingState.cmd}")
+                try:
+                    enum_name = protocol.AstroCMD.Name(WsPacket_messageTeleGetSystemWorkingState.cmd)
+                    my_logger.debug(f">> {enum_name}")
+                except ValueError:
+                # Ignore the error and continue execution
+                    pass
+                my_logger.debug(f"Send type >> {WsPacket_messageTeleGetSystemWorkingState.type}")
+                my_logger.debug(f"msg data len is >> {len(WsPacket_messageTeleGetSystemWorkingState.data)}")
+                print("Sendind End ....");  
 
+            await asyncio.sleep(1)
+
+            await self.websocket.send(WsPacket_message.SerializeToString())
+            print("#----------------#")
+            my_logger.debug(f"Send cmd >> {WsPacket_message.cmd}")
+            try:
+                enum_name = protocol.AstroCMD.Name(WsPacket_message.cmd)
+                my_logger.debug(f">> {enum_name}")
+            except ValueError:
+            # Ignore the error and continue execution
+                pass
+            # Special GOTO  DSO or SOLAR save Target Name to verifiy is GOTO is success
+            if ((self.command == protocol.CMD_ASTRO_START_GOTO_DSO) or (self.command == protocol.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM)):
+                self.target_name = self.message.target_name
+
+            my_logger.debug(f"Send type >> {WsPacket_message.type}")
+            my_logger.debug(f"Send message >> {self.message}")
+            my_logger.debug(f"msg data len is >> {len(WsPacket_message.data)}")
             print("Sendind End ....");  
 
         except Exception as e:
@@ -360,8 +459,8 @@ class WebSocketClient:
                     start_client = True
                     self.websocket = websocket
                     if self.websocket:
-                        print(f"Connected to {self.uri} with {self.message} command:{self.command}")
-
+                        print(f"Connected to {self.uri} with {self.message}command:{self.command}")
+                        print("------------------")
 
                     # Start the task to receive messages
                     #self.receive_task = asyncio.ensure_future(self.receive_messages())
@@ -372,7 +471,7 @@ class WebSocketClient:
                     self.ping_task = asyncio.create_task(self.send_ping_periodically())
 
                     # Start the periodic task to abort all task after timeout
-                    self.abort_tasks_timeout = asyncio.create_task(self.abort_tasks_timeout(90))
+                    self.abort_tasks = asyncio.create_task(self.abort_tasks_timeout(90))
 
                     await asyncio.sleep(2)
 
@@ -390,7 +489,7 @@ class WebSocketClient:
                         results = await asyncio.gather( 
                             self.receive_task,
                             self.ping_task,
-                            self.abort_tasks_timeout,
+                            self.abort_tasks,
                             return_exceptions=True
                         ) 
                         print(results)
@@ -456,9 +555,16 @@ class WebSocketClient:
 def start_socket(message, command, type_id, module_id, uri=config.DWARF_IP, client_id=config.CLIENT_ID, ping_interval=10):
     websocket_uri = ws_uri(uri)
 
-    print(f"Try Connect to {websocket_uri} for {client_id} with:")
+    print(f"Try Connect to {websocket_uri} for {client_id} with data:")
     print(f"{message}")
     print(f"command:{command}")
+    try:
+        enum_name = protocol.AstroCMD.Name(command)
+        print(f">> {enum_name}")
+    except ValueError:
+    # Ignore the error and continue execution
+        pass
+    print("------------------")
 
     try:
         # Create an instance of WebSocketClient

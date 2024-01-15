@@ -1,7 +1,9 @@
 import proto.protocol_pb2 as protocol
-import proto.response_pb2 as response
+import proto.notify_pb2 as response
 import proto.astro_pb2 as astro
 import proto.system_pb2 as system
+# in notify
+import proto.base_pb2 as base__pb2
 
 import lib.my_logger as my_logger
 
@@ -9,7 +11,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     # TEST
     if (show_test):
       test_data = b'\x08\x01\x10\x01\x18\x01 \x03(\xfaU:\x1b\x09\xda\x01\xac\x95\xd6=\x04@\x11\xf7\x15R\x1b\xe8PV@\x1a\x07PolarisB$ff03aa11-5994-4857-a872-b41e8a3a5e51'
-      WsPacket_message = protocol.WsPacket()
+      WsPacket_message = notify.WsPacket()
       WsPacket_message.ParseFromString(test_data)
       my_logger.debug(">>")
       my_logger.debug("decode START GOTO PACKET >>")
@@ -63,7 +65,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xe1v0\x02:\x02\x08IB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x04(\xc8e0\x03B$0000DAF2-0000-1000-8000-00805F9B3500')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xeav0\x02:\x04\x08\x04\x10\x01B$0000DAF2-0000-1000-8000-00805F9B3500')
-    WsPacket_message = protocol.WsPacket()
+    WsPacket_message = base__pb2.WsPacket()
     start = 0
     end = -1
     if (show_test1 and show_test2 ):
@@ -95,7 +97,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
             my_logger.debug("decode type >>", WsPacket_message.type) #2
             my_logger.debug("decode cmd >>", WsPacket_message.cmd) #15211
             if (WsPacket_message.type == 3)or(WsPacket_message.type == 2):
-                ResNotifyStateAstroGoto_message = response.ResNotifyStateAstroGoto()
+                ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
                 ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
                 my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
 
@@ -103,14 +105,14 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
 
             # Result Goto
             if (WsPacket_message.cmd==11002): #CMD_ASTRO_START_GOTO_DSO
-                ComResponse_message = response.ComResponse()
+                ComResponse_message = base__pb2.ComResponse()
                 ComResponse_message.ParseFromString(WsPacket_message.data)
 
                 my_logger.debug("receive data >>", ComResponse_message.code)
 
             # Notification Goto State
             if (WsPacket_message.cmd==15211):
-                ResNotifyStateAstroGoto_message = response.ResNotifyStateAstroGoto()
+                ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
                 ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
 
                 my_logger.debug("receive data >>", ResNotifyStateAstroGoto_message.state)
