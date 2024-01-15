@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message WsPacket {
+    uint32 major_version = 1;  //protocol major version
+    uint32 minor_version = 2;  //protocol version
+    uint32 device_id = 3;  //Device ID
+    uint32 module_id = 4;  //Module ID
+    uint32 cmd = 5;  //instruction
+    uint32 type = 6;  //Message type 0 Request 1 Response 2 Notification 3 Response
+    bytes data = 7;  //Request and response data, corresponding to specific business interfaces
+    string client_id = 8;  //ws Client id
+}

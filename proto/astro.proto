@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+enum AstroCMD {
+    NO_CMD = 0; // No Cmd
+    CMD_ASTRO_START_CALIBRATION = 11000; // Start calibration
+    CMD_ASTRO_STOP_CALIBRATION = 11001; // Stop calibration
+    CMD_ASTRO_START_GOTO_DSO = 11002; // Start GOTO Deep Space Object
+    CMD_ASTRO_START_GOTO_SOLAR_SYSTEM = 11003; // Start GOTO Solar System Target
+    CMD_ASTRO_STOP_GOTO = 11004; // Stop GOTO
+    CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING = 11005; // Start stacking
+    CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING = 11006; // Stop overlay
+    CMD_ASTRO_START_CAPTURE_RAW_DARK = 11007; // Start shooting dark scenes
+    CMD_ASTRO_STOP_CAPTURE_RAW_DARK = 11008; // Stop filming darkfield
+    CMD_ASTRO_CHECK_GOT_DARK = 11009; // Inquire about the dark field that has been shot
+    CMD_ASTRO_GO_LIVE = 11010; // GO LIVE interface
+    CMD_ASTRO_START_TRACK_SPECIAL_TARGET = 11011; // Start tracking the sun and moon
+    CMD_ASTRO_STOP_TRACK_SPECIAL_TARGET = 11012; // Stop tracking the sun and moon
+    CMD_SYSTEM_SET_TIME = 13000; // Set the system time
+    CMD_SYSTEM_SET_TIME_ZONE = 13001; // Set the time zone
+    CMD_NOTIFY_STATE_ASTRO_CALIBRATION = 15210; // Astronomical calibration status
+    CMD_NOTIFY_STATE_ASTRO_GOTO = 15211; // Astronomical GOTO status
+    CMD_NOTIFY_STATE_ASTRO_TRACKING = 15212; // Astronomical tracking status
+    CMD_NOTIFY_WS_HOST_SLAVE_MODE = 15223; // Leader/follower mode notification
+}
+
+// 开始校准
+message ReqStartCalibration {
+    
+}
+
+// 停止校准
+message ReqStopCalibration {
+    
+}
+
+// Goto深空天体
+message ReqGotoDSO {
+    double ra = 1;
+    double dec = 2;
+    string target_name = 3;
+}
+
+// Goto太阳系
+message ReqGotoSolarSystem {
+    int32 index = 1;
+    double lon = 2;
+    double lat = 3;
+    string target_name = 4;
+}
+
+// 停止Goto
+message ReqStopGoto {
+    
+}
+
+// 开始叠图
+message ReqCaptureRawLiveStacking {
+
+}
+
+// 停止叠图
+message ReqStopCaptureRawLiveStacking {
+
+}
+
+// 查询暗场进度
+message ReqCheckDarkFrame {
+
+}
+
+// 暗场进度返回
+message ResCheckDarkFrame {
+    int32 progress = 1;
+    int32 code = 2;
+}
+
+// 开始拍摄暗场
+message ReqCaptureDarkFrame {
+    int32 reshoot = 1;
+}
+
+// 停止拍摄暗场
+message ReqStopCaptureDarkFrame {
+
+}
+
+// GO LIVE接口
+message ReqGoLive {
+
+}
+
+// 开始日月跟踪
+message ReqTrackSpecialTarget {
+    int32 index = 1;
+    double lon = 2;
+    double lat = 3;
+}
+
+// 停止日月跟踪
+message ReqStopTrackSpecialTarget {
+
+}
