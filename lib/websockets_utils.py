@@ -23,7 +23,7 @@ class StopClientException(Exception):
 # new version protobuf enabled
 # use a Class
 class WebSocketClient:
-    def __init__(self, uri, client_id, message, command, type_id, module_id, ping_interval=5):
+    def __init__(self, uri, client_id, message, command, type_id, module_id, ping_interval_task=5):
         self.websocket = False
         self.result = False
         self.uri = uri
@@ -33,7 +33,7 @@ class WebSocketClient:
         self.type_id = type_id
         self.module_id = module_id
         self.client_id = client_id
-        self.ping_interval = ping_interval
+        self.ping_interval_task = ping_interval_task
         self.ping_task = None
         self.receive_task = None
         self.abort_tasks = None
@@ -84,11 +84,13 @@ class WebSocketClient:
                     # Adjust the interval based on your requirements
                     print("Sent a PING frame")
 
-                    await self.websocket.ping()
+                    # Python by defaut sends a frame OP_CODE Ping with 4 bytes
+                    # The dwarf II respond by a frame OP_CODE Pong with no data
+                    await self.websocket.ping("")
                     await self.websocket.send("ping")
                     # Signal to Receive to Wait the Pong Frame
                     self.wait_pong = True
-                    await asyncio.sleep(self.ping_interval)
+                    await asyncio.sleep(self.ping_interval_task)
             await asyncio.sleep(0.02)
 
         except websockets.ConnectionClosedOK as e:
@@ -133,6 +135,7 @@ class WebSocketClient:
                         elif isinstance(message, bytes):
                             print("------------------")
                             print("Receiving...  data")
+
                             WsPacket_message = base__pb2.WsPacket()
                             WsPacket_message.ParseFromString(message)
                             my_logger.debug(f"receive cmd >> {WsPacket_message.cmd}")
@@ -450,8 +453,8 @@ class WebSocketClient:
         try:
             result = False  
             #asyncio.set_event_loop(asyncio.new_event_loop())
-            ping_timeout=self.ping_interval+2
-            print(f"ping_interval : {self.ping_interval}")
+            #ping_timeout=self.ping_interval_task+2
+            print(f"ping_interval : {self.ping_interval_task}")
             start_client = False
             self.stop_task.clear();
             async with websockets.connect(self.uri, ping_interval=None, extra_headers=[("Accept-Encoding", "gzip"), ("Sec-WebSocket-Extensions", "permessage-deflate")]) as websocket:
@@ -485,6 +488,7 @@ class WebSocketClient:
                         #    self.ping_task = tg.create_task(self.send_ping_periodically())
 
                         #print(f"Both tasks have completed now: {self.receive_task.result()}, {self.ping_task.result()}")
+                        #await self.abort_tasks_timeout(30)
 
                         results = await asyncio.gather( 
                             self.receive_task,
@@ -500,6 +504,7 @@ class WebSocketClient:
                         try:
                             self.receive_task.result()
                             self.ping_task.result()
+                            self.abort_tasks.result()
 
                         except Exception as e:
                             print(f"Exception occurred in the Gather try block: {e}")
@@ -552,7 +557,7 @@ class WebSocketClient:
                 print("WebSocket Terminated.")
 
 # Run the client
-def start_socket(message, command, type_id, module_id, uri=config.DWARF_IP, client_id=config.CLIENT_ID, ping_interval=10):
+def start_socket(message, command, type_id, module_id, uri=config.DWARF_IP, client_id=config.CLIENT_ID, ping_interval_task=10):
     websocket_uri = ws_uri(uri)
 
     print(f"Try Connect to {websocket_uri} for {client_id} with data:")
@@ -568,7 +573,7 @@ def start_socket(message, command, type_id, module_id, uri=config.DWARF_IP, clie
 
     try:
         # Create an instance of WebSocketClient
-        client_instance = WebSocketClient(websocket_uri, client_id, message, command, type_id, module_id, ping_interval)
+        client_instance = WebSocketClient(websocket_uri, client_id, message, command, type_id, module_id, ping_interval_task)
 
         # Call the start method to initiate the WebSocket connection and tasks
         asyncio.run(client_instance.start())
