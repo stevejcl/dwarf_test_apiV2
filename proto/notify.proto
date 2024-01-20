@@ -2,6 +2,16 @@ syntax = "proto3";
 
 import "base.proto";
 
+enum State {
+    STATE_IDLE = 0; // Idle state
+    STATE_RUNNING = 1; // Running
+    STATE_STOPPING = 2; // Is stopping
+    STATE_STOPPED = 3; // Has stopped
+    STATE_SUCCESS = 4; // Success
+    STATE_FAILED = 5; // Failure
+    STATE_ASTRO_PLATE_SOLVING = 6; // Astronomy is Plating Solving
+}
+
 enum OperationState {
     OPERATION_STATE_IDLE = 0;
     OPERATION_STATE_RUNNING = 1;
@@ -10,11 +20,11 @@ enum OperationState {
 }
 
 enum AstroState {
-    ASTRO_STATE_IDLE = 0;
-    ASTRO_STATE_RUNNING = 1;
-    ASTRO_STATE_STOPPING = 2;
-    ASTRO_STATE_STOPPED = 3;
-    ASTRO_STATE_PLATE_SOLVING = 4;
+    ASTRO_STATE_IDLE = 0; // Idle state
+    ASTRO_STATE_RUNNING = 1; // Running
+    ASTRO_STATE_STOPPING = 2; // Is stopping
+    ASTRO_STATE_STOPPED = 3; // Has stopped
+    ASTRO_STATE_PLATE_SOLVING = 4; // Astronomy is Plating Solving
 }
 
 // 长焦广角预览画面匹配结果

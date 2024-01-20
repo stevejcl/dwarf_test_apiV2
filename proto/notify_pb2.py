@@ -21,10 +21,61 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0cnotify.proto\x1a\nbase.proto\"l\n\x18ResNotifyPictureMatching\x12\t\n\x01x\x18\x01 \x01(\r\x12\t\n\x01y\x18\x02 \x01(\r\x12\r\n\x05width\x18\x03 \x01(\r\x12\x0e\n\x06height\x18\x04 \x01(\r\x12\r\n\x05value\x18\x05 \x01(\x01\x12\x0c\n\x04\x63ode\x18\x06 \x01(\x05\"O\n\x13ResNotifySDcardInfo\x12\x16\n\x0e\x61vailable_size\x18\x01 \x01(\r\x12\x12\n\ntotal_size\x18\x02 \x01(\r\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x05\"*\n\x13ResNotifyRecordTime\x12\x13\n\x0brecord_time\x18\x01 \x01(\x05\"S\n\x19ResNotifyTimeLapseOutTime\x12\x10\n\x08interval\x18\x01 \x01(\x05\x12\x10\n\x08out_time\x18\x02 \x01(\x05\x12\x12\n\ntotal_time\x18\x03 \x01(\x05\"9\n\x17ResNotifyOperationState\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\"Y\n\x1eResNotifyStateAstroCalibration\x12\x1a\n\x05state\x18\x01 \x01(\x0e\x32\x0b.AstroState\x12\x1b\n\x13plate_solving_times\x18\x02 \x01(\x05\"5\n\x17ResNotifyStateAstroGoto\x12\x1a\n\x05state\x18\x01 \x01(\x0e\x32\x0b.AstroState\"R\n\x1bResNotifyStateAstroTracking\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\x12\x13\n\x0btarget_name\x18\x02 \x01(\t\"K\n\x1fResNotifyProgressCaptureRawDark\x12\x10\n\x08progress\x18\x01 \x01(\x05\x12\x16\n\x0eremaining_time\x18\x02 \x01(\x05\"\xc3\x01\n\'ResNotifyProgressCaptureRawLiveStacking\x12\x13\n\x0btotal_count\x18\x01 \x01(\x05\x12\x19\n\x11update_count_type\x18\x02 \x01(\x05\x12\x15\n\rcurrent_count\x18\x03 \x01(\x05\x12\x15\n\rstacked_count\x18\x04 \x01(\x05\x12\x11\n\texp_index\x18\x05 \x01(\x05\x12\x12\n\ngain_index\x18\x06 \x01(\x05\x12\x13\n\x0btarget_name\x18\x07 \x01(\t\"-\n\x0eResNotifyParam\x12\x1b\n\x05param\x18\x01 \x03(\x0b\x32\x0c.CommonParam\"P\n\x19ResNotifyCamFunctionState\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\x12\x13\n\x0b\x66unction_id\x18\x02 \x01(\r\"F\n\x16ResNotifyBurstProgress\x12\x13\n\x0btotal_count\x18\x01 \x01(\r\x12\x17\n\x0f\x63ompleted_count\x18\x02 \x01(\r\"I\n\x19ResNotifyPanoramaProgress\x12\x13\n\x0btotal_count\x18\x01 \x01(\x05\x12\x17\n\x0f\x63ompleted_count\x18\x02 \x01(\x05\"\"\n\x11ResNotifyRgbState\x12\r\n\x05state\x18\x01 \x01(\x05\"\'\n\x16ResNotifyPowerIndState\x12\r\n\x05state\x18\x01 \x01(\x05\"&\n\x16ResNotifyHostSlaveMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"!\n\x11ResNotifyMTPState\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"B\n\x14ResNotifyTrackResult\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\t\n\x01w\x18\x03 \x01(\x05\x12\t\n\x01h\x18\x04 \x01(\x05\" \n\x10ResNotifyCPUMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"h\n\"ResNotifyStateAstroTrackingSpecial\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\x12\x13\n\x0btarget_name\x18\x02 \x01(\t\x12\r\n\x05index\x18\x03 \x01(\x05\"\x13\n\x11ResNotifyPowerOff*\x82\x01\n\x0eOperationState\x12\x18\n\x14OPERATION_STATE_IDLE\x10\x00\x12\x1b\n\x17OPERATION_STATE_RUNNING\x10\x01\x12\x1c\n\x18OPERATION_STATE_STOPPING\x10\x02\x12\x1b\n\x17OPERATION_STATE_STOPPED\x10\x03*\x8d\x01\n\nAstroState\x12\x14\n\x10\x41STRO_STATE_IDLE\x10\x00\x12\x17\n\x13\x41STRO_STATE_RUNNING\x10\x01\x12\x18\n\x14\x41STRO_STATE_STOPPING\x10\x02\x12\x17\n\x13\x41STRO_STATE_STOPPED\x10\x03\x12\x1d\n\x19\x41STRO_STATE_PLATE_SOLVING\x10\x04\x62\x06proto3'
+  serialized_pb=b'\n\x0cnotify.proto\x1a\nbase.proto\"l\n\x18ResNotifyPictureMatching\x12\t\n\x01x\x18\x01 \x01(\r\x12\t\n\x01y\x18\x02 \x01(\r\x12\r\n\x05width\x18\x03 \x01(\r\x12\x0e\n\x06height\x18\x04 \x01(\r\x12\r\n\x05value\x18\x05 \x01(\x01\x12\x0c\n\x04\x63ode\x18\x06 \x01(\x05\"O\n\x13ResNotifySDcardInfo\x12\x16\n\x0e\x61vailable_size\x18\x01 \x01(\r\x12\x12\n\ntotal_size\x18\x02 \x01(\r\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x05\"*\n\x13ResNotifyRecordTime\x12\x13\n\x0brecord_time\x18\x01 \x01(\x05\"S\n\x19ResNotifyTimeLapseOutTime\x12\x10\n\x08interval\x18\x01 \x01(\x05\x12\x10\n\x08out_time\x18\x02 \x01(\x05\x12\x12\n\ntotal_time\x18\x03 \x01(\x05\"9\n\x17ResNotifyOperationState\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\"Y\n\x1eResNotifyStateAstroCalibration\x12\x1a\n\x05state\x18\x01 \x01(\x0e\x32\x0b.AstroState\x12\x1b\n\x13plate_solving_times\x18\x02 \x01(\x05\"5\n\x17ResNotifyStateAstroGoto\x12\x1a\n\x05state\x18\x01 \x01(\x0e\x32\x0b.AstroState\"R\n\x1bResNotifyStateAstroTracking\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\x12\x13\n\x0btarget_name\x18\x02 \x01(\t\"K\n\x1fResNotifyProgressCaptureRawDark\x12\x10\n\x08progress\x18\x01 \x01(\x05\x12\x16\n\x0eremaining_time\x18\x02 \x01(\x05\"\xc3\x01\n\'ResNotifyProgressCaptureRawLiveStacking\x12\x13\n\x0btotal_count\x18\x01 \x01(\x05\x12\x19\n\x11update_count_type\x18\x02 \x01(\x05\x12\x15\n\rcurrent_count\x18\x03 \x01(\x05\x12\x15\n\rstacked_count\x18\x04 \x01(\x05\x12\x11\n\texp_index\x18\x05 \x01(\x05\x12\x12\n\ngain_index\x18\x06 \x01(\x05\x12\x13\n\x0btarget_name\x18\x07 \x01(\t\"-\n\x0eResNotifyParam\x12\x1b\n\x05param\x18\x01 \x03(\x0b\x32\x0c.CommonParam\"P\n\x19ResNotifyCamFunctionState\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\x12\x13\n\x0b\x66unction_id\x18\x02 \x01(\r\"F\n\x16ResNotifyBurstProgress\x12\x13\n\x0btotal_count\x18\x01 \x01(\r\x12\x17\n\x0f\x63ompleted_count\x18\x02 \x01(\r\"I\n\x19ResNotifyPanoramaProgress\x12\x13\n\x0btotal_count\x18\x01 \x01(\x05\x12\x17\n\x0f\x63ompleted_count\x18\x02 \x01(\x05\"\"\n\x11ResNotifyRgbState\x12\r\n\x05state\x18\x01 \x01(\x05\"\'\n\x16ResNotifyPowerIndState\x12\r\n\x05state\x18\x01 \x01(\x05\"&\n\x16ResNotifyHostSlaveMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"!\n\x11ResNotifyMTPState\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"B\n\x14ResNotifyTrackResult\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\x12\t\n\x01w\x18\x03 \x01(\x05\x12\t\n\x01h\x18\x04 \x01(\x05\" \n\x10ResNotifyCPUMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"h\n\"ResNotifyStateAstroTrackingSpecial\x12\x1e\n\x05state\x18\x01 \x01(\x0e\x32\x0f.OperationState\x12\x13\n\x0btarget_name\x18\x02 \x01(\t\x12\r\n\x05index\x18\x03 \x01(\x05\"\x13\n\x11ResNotifyPowerOff*\x95\x01\n\x05State\x12\x0e\n\nSTATE_IDLE\x10\x00\x12\x11\n\rSTATE_RUNNING\x10\x01\x12\x12\n\x0eSTATE_STOPPING\x10\x02\x12\x11\n\rSTATE_STOPPED\x10\x03\x12\x11\n\rSTATE_SUCCESS\x10\x04\x12\x10\n\x0cSTATE_FAILED\x10\x05\x12\x1d\n\x19STATE_ASTRO_PLATE_SOLVING\x10\x06*\x82\x01\n\x0eOperationState\x12\x18\n\x14OPERATION_STATE_IDLE\x10\x00\x12\x1b\n\x17OPERATION_STATE_RUNNING\x10\x01\x12\x1c\n\x18OPERATION_STATE_STOPPING\x10\x02\x12\x1b\n\x17OPERATION_STATE_STOPPED\x10\x03*\x8d\x01\n\nAstroState\x12\x14\n\x10\x41STRO_STATE_IDLE\x10\x00\x12\x17\n\x13\x41STRO_STATE_RUNNING\x10\x01\x12\x18\n\x14\x41STRO_STATE_STOPPING\x10\x02\x12\x17\n\x13\x41STRO_STATE_STOPPED\x10\x03\x12\x1d\n\x19\x41STRO_STATE_PLATE_SOLVING\x10\x04\x62\x06proto3'
   ,
   dependencies=[base__pb2.DESCRIPTOR,])
 
+_STATE = _descriptor.EnumDescriptor(
+  name='State',
+  full_name='State',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='STATE_IDLE', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='STATE_RUNNING', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='STATE_STOPPING', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='STATE_STOPPED', index=3, number=3,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='STATE_SUCCESS', index=4, number=4,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='STATE_FAILED', index=5, number=5,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='STATE_ASTRO_PLATE_SOLVING', index=6, number=6,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=1570,
+  serialized_end=1719,
+)
+_sym_db.RegisterEnumDescriptor(_STATE)
+
+State = enum_type_wrapper.EnumTypeWrapper(_STATE)
 _OPERATIONSTATE = _descriptor.EnumDescriptor(
   name='OperationState',
   full_name='OperationState',
@@ -55,8 +106,8 @@ _OPERATIONSTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1570,
-  serialized_end=1700,
+  serialized_start=1722,
+  serialized_end=1852,
 )
 _sym_db.RegisterEnumDescriptor(_OPERATIONSTATE)
 
@@ -96,12 +147,19 @@ _ASTROSTATE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1703,
-  serialized_end=1844,
+  serialized_start=1855,
+  serialized_end=1996,
 )
 _sym_db.RegisterEnumDescriptor(_ASTROSTATE)
 
 AstroState = enum_type_wrapper.EnumTypeWrapper(_ASTROSTATE)
+STATE_IDLE = 0
+STATE_RUNNING = 1
+STATE_STOPPING = 2
+STATE_STOPPED = 3
+STATE_SUCCESS = 4
+STATE_FAILED = 5
+STATE_ASTRO_PLATE_SOLVING = 6
 OPERATION_STATE_IDLE = 0
 OPERATION_STATE_RUNNING = 1
 OPERATION_STATE_STOPPING = 2
@@ -1021,6 +1079,7 @@ DESCRIPTOR.message_types_by_name['ResNotifyTrackResult'] = _RESNOTIFYTRACKRESULT
 DESCRIPTOR.message_types_by_name['ResNotifyCPUMode'] = _RESNOTIFYCPUMODE
 DESCRIPTOR.message_types_by_name['ResNotifyStateAstroTrackingSpecial'] = _RESNOTIFYSTATEASTROTRACKINGSPECIAL
 DESCRIPTOR.message_types_by_name['ResNotifyPowerOff'] = _RESNOTIFYPOWEROFF
+DESCRIPTOR.enum_types_by_name['State'] = _STATE
 DESCRIPTOR.enum_types_by_name['OperationState'] = _OPERATIONSTATE
 DESCRIPTOR.enum_types_by_name['AstroState'] = _ASTROSTATE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)

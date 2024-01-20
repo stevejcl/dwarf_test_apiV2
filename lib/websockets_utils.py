@@ -17,6 +17,33 @@ import lib.my_logger as my_logger
 def ws_uri(dwarf_ip):
     return f"ws://{dwarf_ip}:9900"
 
+def getErrorCodeValueName(ErrorCode):
+
+    try:
+        ValueName = protocol.ErrorCodeAstro.Name(ErrorCode)
+    except ValueError:
+        ValueName =""
+        pass
+    return ValueName
+
+def getAstroCMDName(AstroCMDCode):
+
+    try:
+        ValueName = protocol.AstroCMD.Name(AstroCMDCode)
+    except ValueError:
+        ValueName =""
+        pass
+    return ValueName
+
+def getAstroStateName(AstroStateCode):
+
+    try:
+        ValueName = notify.AstroState.Name(AstroStateCode)
+    except ValueError:
+        ValueName =""
+        pass
+    return ValueName
+
 class StopClientException(Exception):
     pass
 
@@ -80,7 +107,7 @@ class WebSocketClient:
                 if self.websocket.state != websockets.protocol.OPEN:
                     print("WebSocket connection is not open.")
                     self.stop_task.set()
-                else:
+                elif (not self.wait_pong):
                     # Adjust the interval based on your requirements
                     print("Sent a PING frame")
 
@@ -91,6 +118,8 @@ class WebSocketClient:
                     # Signal to Receive to Wait the Pong Frame
                     self.wait_pong = True
                     await asyncio.sleep(self.ping_interval_task)
+                else:
+                    await asyncio.sleep(1)
             await asyncio.sleep(0.02)
 
         except websockets.ConnectionClosedOK as e:
@@ -138,13 +167,8 @@ class WebSocketClient:
 
                             WsPacket_message = base__pb2.WsPacket()
                             WsPacket_message.ParseFromString(message)
-                            my_logger.debug(f"receive cmd >> {WsPacket_message.cmd}")
-                            try:
-                                enum_name = protocol.AstroCMD.Name(WsPacket_message.cmd)
-                                my_logger.debug(f">> {enum_name}")
-                            except ValueError:
-                            # Ignore the error and continue execution
-                                pass
+                            my_logger.debug(f"receive cmd >> {WsPacket_message.cmd} type >> {WsPacket_message.type}")
+                            my_logger.debug(f">> {getAstroCMDName(WsPacket_message.cmd)}")
                             my_logger.debug(f"msg data len is >> {len(WsPacket_message.data)}")
                             print("------------------")
 
@@ -175,6 +199,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE")
                                 my_logger.debug(f"receive code data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
 
                                 # NO_ERROR = 0; // No Error
                                 if (ComResponse_message.code != protocol.NO_ERROR):
@@ -194,6 +219,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_NOTIFY_STATE_ASTRO_CALIBRATION")
                                 my_logger.debug(f"receive notification data >> {ResNotifyStateAstroCalibration_message.state}")
+                                my_logger.debug(f">> {getAstroStateName(ResNotifyStateAstroCalibration_message.state)}")
                                 my_logger.debug(f"receive notification times >> {ResNotifyStateAstroCalibration_message.plate_solving_times}")
 
                                 # ASTRO_STATE_IDLE = 0; // Idle state Only when Success
@@ -214,6 +240,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_NOTIFY_STATE_ASTRO_GOTO")
                                 my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
+                                my_logger.debug(f">> {getAstroStateName(ResNotifyStateAstroGoto_message.state)}")
 
                             # CMD_NOTIFY_STATE_ASTRO_TRACKING = 15212; // Astronomical tracking status
                             elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_STATE_ASTRO_TRACKING):
@@ -222,6 +249,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_NOTIFY_STATE_ASTRO_TRACKING")
                                 my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
+                                my_logger.debug(f">> {getAstroStateName(ResNotifyStateAstroGoto_message.state)}")
                                 my_logger.debug(f"receive notification target_name >> {ResNotifyStateAstroGoto_message.target_name}")
 
                                 # ASTRO_STATE_RUNNING = 1; // Running 
@@ -252,6 +280,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_ASTRO_START_CALIBRATION")
                                 my_logger.debug(f"receive code data >> {ComResponse.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse.code)}")
 
                                 # CODE_ASTRO_CALIBRATION_FAILED = -11504; // Calibration failed
                                 if (ComResponse.code == -11504):
@@ -269,6 +298,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_SYSTEM_SET_TIME")
                                 my_logger.debug(f"receive code data >> {ComResponse.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse.code)}")
 
                                 # Signal the ping and receive functions to stop
                                 self.stop_task.set()
@@ -286,6 +316,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_SYSTEM_SET_TIME_ZONE")
                                 my_logger.debug(f"receive code data >> {ComResponse.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse.code)}")
 
                                 # Signal the ping and receive functions to stop
                                 self.stop_task.set()
@@ -303,6 +334,7 @@ class WebSocketClient:
 
                                 print("Decoding CMD_ASTRO_START_GOTO_DSO")
                                 my_logger.debug(f"receive data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
 
                                 if (ComResponse_message.code != protocol.NO_ERROR):
                                     my_logger.debug(f"Error GOTO {ComResponse_message.code} >> EXIT")
@@ -328,18 +360,23 @@ class WebSocketClient:
                                     ComResponse_message.ParseFromString(WsPacket_message.data)
 
                                     my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                    my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+
                                 if( WsPacket_message.type == 2):
                                     print("Decoding Notification Frame")
                                     ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
                                     ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
 
                                     my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
+                                    my_logger.debug(f">> {getAstroStateName(ResNotifyStateAstroGoto_message.state)}")
+
                                 if( WsPacket_message.type == 3):
                                     print("Decoding Response Notification Frame")
                                     ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
                                     ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
 
                                     my_logger.debug(f"receive notification data >> {ResNotifyStateAstroGoto_message.state}")
+                                    my_logger.debug(f">> {getErrorCodeValueName(ResNotifyStateAstroGoto_message.state)}")
                         else:
                             print("Ignoring Unkown Type Frames")
                     else:
@@ -412,12 +449,8 @@ class WebSocketClient:
                 await self.websocket.send(WsPacket_messageTeleGetSystemWorkingState.SerializeToString())
                 print("#----------------#")
                 my_logger.debug(f"Send cmd >> {WsPacket_messageTeleGetSystemWorkingState.cmd}")
-                try:
-                    enum_name = protocol.AstroCMD.Name(WsPacket_messageTeleGetSystemWorkingState.cmd)
-                    my_logger.debug(f">> {enum_name}")
-                except ValueError:
-                # Ignore the error and continue execution
-                    pass
+                my_logger.debug(f">> {getAstroCMDName(WsPacket_messageTeleGetSystemWorkingState.cmd)}")
+
                 my_logger.debug(f"Send type >> {WsPacket_messageTeleGetSystemWorkingState.type}")
                 my_logger.debug(f"msg data len is >> {len(WsPacket_messageTeleGetSystemWorkingState.data)}")
                 print("Sendind End ....");  
@@ -427,12 +460,8 @@ class WebSocketClient:
             await self.websocket.send(WsPacket_message.SerializeToString())
             print("#----------------#")
             my_logger.debug(f"Send cmd >> {WsPacket_message.cmd}")
-            try:
-                enum_name = protocol.AstroCMD.Name(WsPacket_message.cmd)
-                my_logger.debug(f">> {enum_name}")
-            except ValueError:
-            # Ignore the error and continue execution
-                pass
+            my_logger.debug(f">> {getAstroCMDName(WsPacket_message.cmd)}")
+
             # Special GOTO  DSO or SOLAR save Target Name to verifiy is GOTO is success
             if ((self.command == protocol.CMD_ASTRO_START_GOTO_DSO) or (self.command == protocol.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM)):
                 self.target_name = self.message.target_name
@@ -563,12 +592,7 @@ def start_socket(message, command, type_id, module_id, uri=config.DWARF_IP, clie
     print(f"Try Connect to {websocket_uri} for {client_id} with data:")
     print(f"{message}")
     print(f"command:{command}")
-    try:
-        enum_name = protocol.AstroCMD.Name(command)
-        print(f">> {enum_name}")
-    except ValueError:
-    # Ignore the error and continue execution
-        pass
+    my_logger.debug(f">> {getAstroCMDName(command)}")
     print("------------------")
 
     try:

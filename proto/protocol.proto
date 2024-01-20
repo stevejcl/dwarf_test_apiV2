@@ -14,6 +14,8 @@ enum ModuleId {
     MODULE_PANORAMA = 10; // 15500-15599 Panoramic module
 }
 
+
+
 enum AstroCMD {
     NO_CMD = 0; // No Cmd
 
@@ -119,21 +121,40 @@ enum ErrorCodeAstro {
     WS_SDCARD_NOT_EXIST = -2; // SD card not detected
     WS_INVALID_PARAM = -3; // Invalid parameter
     WS_SDCARD_WRITE_ERROR = -4; // Image writing to SD card failed (maybe the card is full)
-    CODE_ASTRO_PLATE_SOLVING_FAILED = -11500; // Plate solving failed
-    CODE_ASTRO_FUNCTION_BUSY = -11501; // Astronomical function busy
-    CODE_ASTRO_CALIBRATION_FAILED = -11504; // Calibration failed
-    CODE_STEP_MOTOR_LIMIT_POSITION_WARNING = -14518; // GOTO limit warning
-    CODE_STEP_MOTOR_LIMIT_POSITION_HITTED = -14519; // Star collision limit
-    CODE_ASTRO_GOTO_FAILED = -11505; // GOTO failed
-    CODE_ASTRO_NEED_GOTO = -11513; // No GOTO
-    CODE_SYSTEM_SET_TIME_FAILED = -13300; // Set time failed
-    CODE_SYSTEM_SET_TIMEZONE_FAILED = -13301; // Failed to set time zone
+
     CODE_CAMERA_TELE_OPENED = -10500; // Camera is turned on
     CODE_CAMERA_TELE_CLOSED = -10501; // Camera is off
     CODE_CAMERA_TELE_ISP_SET_FAILED = -10502; // ISP parameter settings failed
     CODE_CAMERA_TELE_OPEN_FAILED = -10504; // Camera failed to open
+    CODE_CAMERA_TELE_WORKING_BUSY_STACK = -10507; // The telephoto camera is busy.
     CODE_CAMERA_TELE_CAPTURE_RAW_FAILED = -10510; // Failed to catch RAW image
-    CODE_CAMERA_TELE_WORKING_BUSY = -10511; // The telephoto camera is busy with work}
+    CODE_CAMERA_TELE_WORKING_BUSY = -10511; // The telephoto camera is busy with work
+
+    CODE_ASTRO_PLATE_SOLVING_FAILED = -11500; // Plate solving failed
+    CODE_ASTRO_FUNCTION_BUSY = -11501; // Astronomical function busy
+    CODE_ASTRO_DARK_GAIN_OUT_OF_RANGE = -11502; // Gain beyond darkfield shooting range (darkfield coverage 30-150 gain)
+    CODE_ASTRO_DARK_NOT_FOUND = -11503; // Darkfield not found
+    CODE_ASTRO_CALIBRATION_FAILED = -11504; // Calibration failed
+    CODE_ASTRO_GOTO_FAILED = -11505; // GOTO failed
+    CODE_ASTRO_NEED_GOTO = -11513; // No GOTO
+    CODE_ASTRO_NEED_ADJUST_SHOOT_PARAM = -11514; // Parameters are not suitable
+    
+    CODE_CAMERA_WIDE_OPENED = -12500; // Wide-angle camera turned on
+    CODE_CAMERA_WIDE_CLOSED = -12501; // The wide-angle camera is turned off
+    CODE_CAMERA_WIDE_CANNOT_FOUND = -12502; // Can't find the camera
+    CODE_CAMERA_WIDE_OPEN_FAILED = -12503; // Failed to open camera
+    CODE_CAMERA_WIDE_CLOSE_FAILED = -12504; // Failed to turn off camera
+    CODE_CAMERA_WIDE_SET_ISP_FAILED = -12505; // Failed to set ISP parameters
+    CODE_CAMERA_WIDE_PHOTOGRAPHING = -12506; // Taking pictures
+
+    CODE_SYSTEM_SET_TIME_FAILED = -13300; // Set time failed
+    CODE_SYSTEM_SET_TIMEZONE_FAILED = -13301; // Failed to set time zone
+    CODE_SYSTEM_SETTING_TIMEZONE_FAILED = -13302; // Time zone setting failed
+
+    CODE_STEP_MOTOR_LIMIT_POSITION_WARNING = -14518; // GOTO limit warning
+    CODE_STEP_MOTOR_LIMIT_POSITION_HITTED = -14519; // Star collision limit
+    CODE_PANORAMA_PHOTO_FAILED = -15600; // Panoramic shooting failed
+    CODE_PANORAMA_MOTOR_RESET_FAILED = -15601; // Panoramic shooting motor reset failed
 }
 
 enum AstroTrackingSpecial {
