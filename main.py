@@ -93,19 +93,19 @@ def option_10():
     perform_decoding_test(True, False, False)
 
 def option_11():
-    print("You selected Option T2: Decoding Test Frames 1")
+    print("You selected Option T2: Decoding Test Frames 2")
     print("")
     # Add your Option T1 functionality here
     perform_decoding_test(False, True, False)
 
 def option_12():
-    print("You selected Option T3: Decoding Test Frames 1")
+    print("You selected Option T3: Decoding Test Frames 3")
     print("")
     # Add your Option T1 functionality here
     perform_decoding_test(False, False, True)
 
 def option_13():
-    print("You selected Option T4: Decoding Test Frames 1")
+    print("You selected Option T4: Decoding Test All Frames")
     print("")
     # Add your Option T1 functionality here
     perform_decoding_test(True, True, True)

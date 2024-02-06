@@ -1,11 +1,38 @@
 import proto.protocol_pb2 as protocol
-import proto.notify_pb2 as response
+import proto.notify_pb2 as notify
 import proto.astro_pb2 as astro
 import proto.system_pb2 as system
 # in notify
 import proto.base_pb2 as base__pb2
 
 import lib.my_logger as my_logger
+
+def getErrorCodeValueName(ErrorCode):
+
+    try:
+        ValueName = protocol.ErrorCodeAstro.Name(ErrorCode)
+    except ValueError:
+        ValueName =""
+        pass
+    return ValueName
+
+def getAstroCMDName(AstroCMDCode):
+
+    try:
+        ValueName = protocol.AstroCMD.Name(AstroCMDCode)
+    except ValueError:
+        ValueName =""
+        pass
+    return ValueName
+
+def getAstroStateName(AstroStateCode):
+
+    try:
+        ValueName = notify.AstroState.Name(AstroStateCode)
+    except ValueError:
+        ValueName =""
+        pass
+    return ValueName
 
 def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     # TEST
@@ -48,7 +75,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xe1v0\x02:\x02\x08\x14B%ff03aa11-5994-4857-a872-b411e8a3a5e51')
 
     start_test2 = 9
-    end_test2 = 24
+    end_test2 = 39
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xebv0\x02:\x02\x08\x01B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xedv0\x02:\x08\x0a\x06\x08\x01\x10\x01(xB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xedv0\x02:\x0a\x0a\x08\x08\x01\x10\x01\x18\x01(\x18B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
@@ -65,6 +92,28 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xe1v0\x02:\x02\x08IB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x04(\xc8e0\x03B$0000DAF2-0000-1000-8000-00805F9B3500')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xeav0\x02:\x04\x08\x04\x10\x01B$0000DAF2-0000-1000-8000-00805F9B3500')
+
+    # Calibration
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xe1v0\x02:\x02\x08dB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x03(\xf8U0\x03:\x0b\x08\x94\xa6\xff\xff\xff\xff\xff\xff\xff\x01B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xeav0\x02:\x04\x08\x04\x10\x06B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x03(\xf8U0\x03:\x0b\x08\x94\xa6\xff\xff\xff\xff\xff\xff\xff\x01B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xeav0\x02:\x04\x08\x04\x10\x07B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x03(\xf8U0\x03:\x0b\x08\xca\x8e\xff\xff\xff\xff\xff\xff\xff\x01B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x03(\xf8U0\x03:\x0b\x08\x94\xa6\xff\xff\xff\xff\xff\xff\xff\x01B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xeav0\x02:\x04\x08\x04\x10\x08B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x03(\xf8U0\x03:\x0b\x08\x90\xa6\xff\xff\xff\xff\xff\xff\xff\x01B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xeav0\x02:\x04\x08\x03\x10\x08B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xeav0\x02:\x02\x10\x08B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    # Reboot
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x01(\x91NB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x02(\xe1]B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x05(\xc1iB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x05(\xc1i0\x03B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+
+
     WsPacket_message = base__pb2.WsPacket()
     start = 0
     end = -1
@@ -77,8 +126,8 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
         end = end_test1
         print("--2--")
     if ((not show_test1) and show_test2 ):
-        start = start_test1
-        end = end_test2 - start_test2
+        start = start_test2
+        end = end_test2
         print("--3--")
    
     if (show_test1 or show_test2):
@@ -96,10 +145,21 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
             my_logger.debug("decode module_id >>", WsPacket_message.module_id) #9
             my_logger.debug("decode type >>", WsPacket_message.type) #2
             my_logger.debug("decode cmd >>", WsPacket_message.cmd) #15211
+            my_logger.debug(f">> {getAstroCMDName(WsPacket_message.cmd)}")
             if (WsPacket_message.type == 3)or(WsPacket_message.type == 2):
-                ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
-                ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
-                my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
+                if ((WsPacket_message.cmd == protocol.CMD_ASTRO_STOP_CALIBRATION) or (WsPacket_message.cmd == protocol.CMD_NOTIFY_STATE_ASTRO_CALIBRATION)):
+                    ResNotifyStateAstroCalibration_message = notify.ResNotifyStateAstroCalibration()
+                    ResNotifyStateAstroCalibration_message.ParseFromString(WsPacket_message.data)
+                    my_logger.debug("receive notification data >>", ResNotifyStateAstroCalibration_message.state)
+                    my_logger.debug("receive notification times >>", ResNotifyStateAstroCalibration_message.plate_solving_times)
+                elif (WsPacket_message.cmd == protocol.CMD_ASTRO_START_CALIBRATION):
+                    ComResponse_message = base__pb2.ComResponse()
+                    ComResponse_message.ParseFromString(WsPacket_message.data)
+                    my_logger.debug("receive data >>", ComResponse_message.code)
+                else :
+                    ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
+                    ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
+                    my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
 
             my_logger.debug("decode client_id >>", WsPacket_message.client_id) # ff03aa11-5994-4857-a872-b41e8a3a5e51
 
