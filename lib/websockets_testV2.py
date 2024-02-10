@@ -10,16 +10,16 @@ import lib.my_logger as my_logger
 def getErrorCodeValueName(ErrorCode):
 
     try:
-        ValueName = protocol.ErrorCodeAstro.Name(ErrorCode)
+        ValueName = protocol.DwarfErrorCode.Name(ErrorCode)
     except ValueError:
         ValueName =""
         pass
     return ValueName
 
-def getAstroCMDName(AstroCMDCode):
+def getDwarfCMDName(DwarfCMDCode):
 
     try:
-        ValueName = protocol.AstroCMD.Name(AstroCMDCode)
+        ValueName = protocol.DwarfCMD.Name(DwarfCMDCode)
     except ValueError:
         ValueName =""
         pass
@@ -75,7 +75,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xe1v0\x02:\x02\x08\x14B%ff03aa11-5994-4857-a872-b411e8a3a5e51')
 
     start_test2 = 9
-    end_test2 = 39
+    end_test2 = 40
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xebv0\x02:\x02\x08\x01B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xedv0\x02:\x08\x0a\x06\x08\x01\x10\x01(xB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x09(\xedv0\x02:\x0a\x0a\x08\x08\x01\x10\x01\x18\x01(\x18B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
@@ -111,6 +111,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x01(\x91NB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x02(\xe1]B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x05(\xc1iB$ff03aa11-5994-4857-a872-b41e8a3a5e51')
+    test_response.append(b'\x08\x01\x10\x01\x18\x01 \x01(\xe0]0\x03B$ff03aa11-5994-4857-a872-b41e8a3a5e51');
     test_response.append(b'\x08\x01\x10\x01\x18\x01 \x05(\xc1i0\x03B$ff03aa11-5994-4857-a872-b41e8a3a5e51')
 
 
@@ -145,7 +146,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
             my_logger.debug("decode module_id >>", WsPacket_message.module_id) #9
             my_logger.debug("decode type >>", WsPacket_message.type) #2
             my_logger.debug("decode cmd >>", WsPacket_message.cmd) #15211
-            my_logger.debug(f">> {getAstroCMDName(WsPacket_message.cmd)}")
+            my_logger.debug(f">> {getDwarfCMDName(WsPacket_message.cmd)}")
             if (WsPacket_message.type == 3)or(WsPacket_message.type == 2):
                 if ((WsPacket_message.cmd == protocol.CMD_ASTRO_STOP_CALIBRATION) or (WsPacket_message.cmd == protocol.CMD_NOTIFY_STATE_ASTRO_CALIBRATION)):
                     ResNotifyStateAstroCalibration_message = notify.ResNotifyStateAstroCalibration()

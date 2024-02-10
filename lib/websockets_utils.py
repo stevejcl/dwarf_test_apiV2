@@ -20,16 +20,16 @@ def ws_uri(dwarf_ip):
 def getErrorCodeValueName(ErrorCode):
 
     try:
-        ValueName = protocol.ErrorCodeAstro.Name(ErrorCode)
+        ValueName = protocol.DwarfErrorCode.Name(ErrorCode)
     except ValueError:
         ValueName =""
         pass
     return ValueName
 
-def getAstroCMDName(AstroCMDCode):
+def getDwarfCMDName(DwarfCMDCode):
 
     try:
-        ValueName = protocol.AstroCMD.Name(AstroCMDCode)
+        ValueName = protocol.DwarfCMD.Name(DwarfCMDCode)
     except ValueError:
         ValueName =""
         pass
@@ -169,7 +169,7 @@ class WebSocketClient:
                             WsPacket_message = base__pb2.WsPacket()
                             WsPacket_message.ParseFromString(message)
                             my_logger.debug(f"receive cmd >> {WsPacket_message.cmd} type >> {WsPacket_message.type}")
-                            my_logger.debug(f">> {getAstroCMDName(WsPacket_message.cmd)}")
+                            my_logger.debug(f">> {getDwarfCMDName(WsPacket_message.cmd)}")
                             my_logger.debug(f"msg data len is >> {len(WsPacket_message.data)}")
                             print("------------------")
 
@@ -202,8 +202,8 @@ class WebSocketClient:
                                 my_logger.debug(f"receive code data >> {ComResponse_message.code}")
                                 my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
 
-                                # NO_ERROR = 0; // No Error
-                                if (ComResponse_message.code != protocol.NO_ERROR):
+                                # OK = 0; // No Error
+                                if (ComResponse_message.code != protocol.OK):
                                     my_logger.debug(f"Error GET_SYSTEM_WORKING_STATE {ComResponse_message.code} >> EXIT")
                                     # Signal the ping and receive functions to stop
                                     self.stop_task.set()
@@ -212,6 +212,26 @@ class WebSocketClient:
                                     print("Error CAMERA_TELE_GET_SYSTEM_WORKING_STATE CODE " + ComResponse_message.code)
                                 else:
                                     print("Continue OK CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE")
+
+                            # CMD_CAMERA_TELE_OPEN_CAMERA = 10000; // // Poen the TELE Camera
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_OPEN_CAMERA):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_CAMERA_TELE_OPEN_CAMERA")
+                                my_logger.debug(f"receive code data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+
+                                # OK = 0; // No Error
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error GET_CAMERA_TELE_OPEN_CAMERA {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = "ok"
+                                    await asyncio.sleep(5)
+                                    print("Error CMD_CAMERA_TELE_OPEN_CAMERA CODE " + ComResponse_message.code)
+                                else:
+                                    print("Continue OK CMD_CAMERA_TELE_OPEN_CAMERA")
 
                             # CMD_NOTIFY_STATE_ASTRO_CALIBRATION = 15210; // Astronomical calibration status
                             elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_STATE_ASTRO_CALIBRATION):
@@ -338,7 +358,7 @@ class WebSocketClient:
                                 my_logger.debug(f"receive data >> {ComResponse_message.code}")
                                 my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
 
-                                if (ComResponse_message.code != protocol.NO_ERROR):
+                                if (ComResponse_message.code != protocol.OK):
                                     my_logger.debug(f"Error GOTO {ComResponse_message.code} >> EXIT")
                                     # Signal the ping and receive functions to stop
                                     self.stop_task.set()
@@ -430,6 +450,19 @@ class WebSocketClient:
         WsPacket_messageTeleGetSystemWorkingState.type = 0; #REQUEST
         WsPacket_messageTeleGetSystemWorkingState.client_id = self.client_id # "0000DAF2-0000-1000-8000-00805F9B34FB"  # ff03aa11-5994-4857-a872-b411e8a3a5e51
 
+        #CMD_CAMERA_TELE_OPEN_CAMERA
+        WsPacket_messageCameraTeleOpen = base__pb2.WsPacket()
+        ReqOpenCamera_message = camera.ReqOpenCamera()
+        WsPacket_messageCameraTeleOpen.data = ReqOpenCamera_message.SerializeToString()
+
+        WsPacket_messageCameraTeleOpen.major_version = major_version
+        WsPacket_messageCameraTeleOpen.minor_version = minor_version
+        WsPacket_messageCameraTeleOpen.device_id = device_id
+        WsPacket_messageCameraTeleOpen.module_id = 1  # MODULE_TELEPHOTO
+        WsPacket_messageCameraTeleOpen.cmd = 10000 #CMD_CAMERA_TELE_OPEN_CAMERA
+        WsPacket_messageCameraTeleOpen.type = 0; #REQUEST
+        WsPacket_messageCameraTeleOpen.client_id = self.client_id # "0000DAF2-0000-1000-8000-00805F9B34FB"  # ff03aa11-5994-4857-a872-b411e8a3a5e51
+
         # SEND COMMAND
         WsPacket_message = base__pb2.WsPacket()
         WsPacket_message.data = self.message.SerializeToString()
@@ -451,10 +484,21 @@ class WebSocketClient:
                 await self.websocket.send(WsPacket_messageTeleGetSystemWorkingState.SerializeToString())
                 print("#----------------#")
                 my_logger.debug(f"Send cmd >> {WsPacket_messageTeleGetSystemWorkingState.cmd}")
-                my_logger.debug(f">> {getAstroCMDName(WsPacket_messageTeleGetSystemWorkingState.cmd)}")
+                my_logger.debug(f">> {getDwarfCMDName(WsPacket_messageTeleGetSystemWorkingState.cmd)}")
 
                 my_logger.debug(f"Send type >> {WsPacket_messageTeleGetSystemWorkingState.type}")
                 my_logger.debug(f"msg data len is >> {len(WsPacket_messageTeleGetSystemWorkingState.data)}")
+                print("Sendind End ....");  
+
+                await asyncio.sleep(1)
+
+                await self.websocket.send(WsPacket_messageCameraTeleOpen.SerializeToString())
+                print("#----------------#")
+                my_logger.debug(f"Send cmd >> {WsPacket_messageCameraTeleOpen.cmd}")
+                my_logger.debug(f">> {getDwarfCMDName(WsPacket_messageCameraTeleOpen.cmd)}")
+
+                my_logger.debug(f"Send type >> {WsPacket_messageCameraTeleOpen.type}")
+                my_logger.debug(f"msg data len is >> {len(WsPacket_messageCameraTeleOpen.data)}")
                 print("Sendind End ....");  
 
             await asyncio.sleep(1)
@@ -462,7 +506,7 @@ class WebSocketClient:
             await self.websocket.send(WsPacket_message.SerializeToString())
             print("#----------------#")
             my_logger.debug(f"Send cmd >> {WsPacket_message.cmd}")
-            my_logger.debug(f">> {getAstroCMDName(WsPacket_message.cmd)}")
+            my_logger.debug(f">> {getDwarfCMDName(WsPacket_message.cmd)}")
 
             # Special GOTO  DSO or SOLAR save Target Name to verifiy is GOTO is success
             if ((self.command == protocol.CMD_ASTRO_START_GOTO_DSO) or (self.command == protocol.CMD_ASTRO_START_GOTO_SOLAR_SYSTEM)):
@@ -598,7 +642,7 @@ def start_socket(message, command, type_id, module_id, uri=config.DWARF_IP, clie
     print(f"Try Connect to {websocket_uri} for {client_id} with data:")
     print(f"{message}")
     print(f"command:{command}")
-    my_logger.debug(f">> {getAstroCMDName(command)}")
+    my_logger.debug(f">> {getDwarfCMDName(command)}")
     print("------------------")
 
     try:
