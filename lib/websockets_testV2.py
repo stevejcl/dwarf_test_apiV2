@@ -1,3 +1,4 @@
+import ast
 import proto.protocol_pb2 as protocol
 import proto.notify_pb2 as notify
 import proto.astro_pb2 as astro
@@ -180,3 +181,42 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
 
         my_logger.debug("<< END TEST >>")
         my_logger.debug("")
+
+
+def fct_decode_wireshark(user_frame, masked = False, user_maskedcode = ""):
+    # TEST
+    data_frame = ast.literal_eval(f'b{user_frame}') #user_frame.encode('latin-1')
+
+    if (masked):
+        # do something
+        util_data_frame = data_frame
+    else:
+        util_data_frame = data_frame
+
+    WsPacket_message = base__pb2.WsPacket()
+    WsPacket_message.ParseFromString(util_data_frame)
+    my_logger.debug("") 
+    my_logger.debug("decode  >>", data_frame) #1
+    my_logger.debug("decode major_version >>", WsPacket_message.major_version) #1
+    my_logger.debug("decode minor_version >>", WsPacket_message.minor_version) #1
+    my_logger.debug("decode device_id >>", WsPacket_message.device_id) #1
+    my_logger.debug("decode module_id >>", WsPacket_message.module_id) #9
+    my_logger.debug("decode type >>", WsPacket_message.type) #2
+    my_logger.debug("decode cmd >>", WsPacket_message.cmd) #15211
+    my_logger.debug(f">> {getDwarfCMDName(WsPacket_message.cmd)}")
+    if (WsPacket_message.type == 3)or(WsPacket_message.type == 2):
+        if ((WsPacket_message.cmd == protocol.CMD_ASTRO_STOP_CALIBRATION) or (WsPacket_message.cmd == protocol.CMD_NOTIFY_STATE_ASTRO_CALIBRATION)):
+            ResNotifyStateAstroCalibration_message = notify.ResNotifyStateAstroCalibration()
+            ResNotifyStateAstroCalibration_message.ParseFromString(WsPacket_message.data)
+            my_logger.debug("receive notification data >>", ResNotifyStateAstroCalibration_message.state)
+            my_logger.debug("receive notification times >>", ResNotifyStateAstroCalibration_message.plate_solving_times)
+        elif (WsPacket_message.cmd == protocol.CMD_ASTRO_START_CALIBRATION):
+            ComResponse_message = base__pb2.ComResponse()
+            ComResponse_message.ParseFromString(WsPacket_message.data)
+            my_logger.debug("receive data >>", ComResponse_message.code)
+        else :
+            ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
+            ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)
+            my_logger.debug("receive notification data >>", ResNotifyStateAstroGoto_message.state)
+
+    my_logger.debug("decode client_id >>", WsPacket_message.client_id) # ff03aa11-5994-4857-a872-b41e8a3a5e51

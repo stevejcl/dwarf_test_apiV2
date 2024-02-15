@@ -7,7 +7,7 @@ from lib.dwarf_utils import perform_time
 from lib.dwarf_utils import perform_timezone
 from lib.dwarf_utils import perform_calibration
 from lib.dwarf_utils import perform_decoding_test
-
+from lib.dwarf_utils import perform_decode_wireshark
 from lib.dwarf_utils import read_longitude
 from lib.dwarf_utils import read_latitude
 
@@ -27,10 +27,11 @@ def display_menu():
     print("T2. Decoding Test Frames 2")
     print("T3. Decoding Test Frames 3")
     print("T4. Decoding All Test Frames")
+    print("D. Decoding Unmasked Wireshark Frame")
     print("0. Exit")
 
 def get_user_choice():
-    choice = input("Enter your choice (1-9) or (T1 to T4) or 0 to exit: ")
+    choice = input("Enter your choice (1-9) or (T1 to T4) or D or 0 to exit: ")
     return choice
 
 def option_1():
@@ -95,20 +96,26 @@ def option_10():
 def option_11():
     print("You selected Option T2: Decoding Test Frames 2")
     print("")
-    # Add your Option T1 functionality here
+    # Add your Option T2 functionality here
     perform_decoding_test(False, True, False)
 
 def option_12():
     print("You selected Option T3: Decoding Test Frames 3")
     print("")
-    # Add your Option T1 functionality here
+    # Add your Option T3 functionality here
     perform_decoding_test(False, False, True)
 
 def option_13():
     print("You selected Option T4: Decoding Test All Frames")
     print("")
-    # Add your Option T1 functionality here
+    # Add your Option T4 functionality here
     perform_decoding_test(True, True, True)
+
+def option_14():
+    print("You selected Option D. Decoding Unmasked Wireshark Frame")
+    print("")
+    # Add your Option D1 functionality here
+    input_frame(False)
 
 def input_data():
     user_longitude = input("Enter your Longitude: ")
@@ -119,6 +126,15 @@ def input_data():
     print("You entered:", user_timezone)
     print("")
     update_config(user_longitude, user_latitude, user_timezone)
+
+def input_frame(masked):
+    user_frame = input("Enter the wireshark capture frame payload data (option copy as C String): ")
+    user_maskedcode = ""
+    print("You entered:", user_frame)
+    if (masked):
+        user_maskedcode = input("Enter the masked code: ")
+        print("You entered:", user_maskedcode)
+    perform_decode_wireshark(user_frame, masked, user_maskedcode)
 
 def select_solar_target (target):
    
@@ -235,6 +251,9 @@ def main():
 
         elif user_choice == 'T4':
             option_13()
+
+        elif user_choice == 'D':
+            option_14()
 
         elif user_choice == '0':
             print("Exiting the program. Goodbye!")

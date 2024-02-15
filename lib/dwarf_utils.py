@@ -1,5 +1,6 @@
 from lib.websockets_utils import connect_socket
 from lib.websockets_testV2 import fct_show_test
+from lib.websockets_testV2 import fct_decode_wireshark
 
 import lib.my_logger as log
 
@@ -205,3 +206,8 @@ def perform_calibration():
 def perform_decoding_test(show_test, show_test1, show_test2):
 
     fct_show_test(show_test, show_test1, show_test2)
+
+
+def perform_decode_wireshark(masked, user_frame, user_maskedcode):
+
+    fct_decode_wireshark(masked, user_frame, user_maskedcode)
