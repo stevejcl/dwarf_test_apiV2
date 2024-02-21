@@ -23,6 +23,9 @@ def read_longitude():
     except configparser.NoOptionError:
         print("longitude not found.")
         return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
 
 def read_latitude():
     config = configparser.ConfigParser()
@@ -33,6 +36,9 @@ def read_latitude():
         return latitude
     except configparser.NoOptionError:
         print("latitude not found.")
+        return None
+    except configparser.NoSectionError:
+        print("Data not found.")
         return None
 
 def read_timezone():
@@ -45,10 +51,118 @@ def read_timezone():
     except configparser.NoOptionError:
         print("timezone not found.")
         return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
 
+def read_camera_exposure():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        camera_exposure = config.get('CONFIG', 'EXPOSURE')
+        return camera_exposure
+    except configparser.NoOptionError:
+        print("camera exposure not found.")
+        return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
+
+def read_camera_gain():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        camera_gain = config.get('CONFIG', 'GAIN')
+        return camera_gain
+    except configparser.NoOptionError:
+        print("camera gain not found.")
+        return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
+
+def read_camera_IR():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        camera_IR = config.get('CONFIG', 'IRCUT')
+        return camera_IR
+    except configparser.NoOptionError:
+        print("camera IRCUT value not found.")
+        return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
+
+def read_camera_binning():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        camera_binning = config.get('CONFIG', 'BINNING')
+        return camera_binning
+    except configparser.NoOptionError:
+        print("camera binning not found.")
+        return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
+
+def read_camera_format():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        camera_format = config.get('CONFIG', 'FORMAT')
+        return camera_format
+    except configparser.NoOptionError:
+        print("camera format of image not found.")
+        return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
+
+def read_camera_count():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        camera_count = config.get('CONFIG', 'COUNT')
+        return camera_count
+    except configparser.NoOptionError:
+        print("Nb of images to take not found.")
+        return None
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return None
+
+def parse_ra_to_float(ra_string):
+    # Split the RA string into hours, minutes, and seconds
+    hours, minutes, seconds = map(float, ra_string.split(':'))
+
+    # Convert to decimal degrees
+    ra_decimal = hours + minutes / 60 + seconds / 3600
+
+    return ra_decimal
+    
+def parse_dec_to_float(dec_string):
+    # Split the Dec string into degrees, minutes, and seconds
+    if dec_string[0] == '-':
+        sign = -1
+        dec_string = dec_string[1:]
+    else:
+        sign = 1
+    print(dec_string)
+    degrees, minutes, seconds = map(float, dec_string.split(':'))
+
+    # Convert to decimal degrees
+    dec_decimal = sign * degrees + minutes / 60 + seconds / 3600
+
+    return dec_decimal
 def perform_getstatus():
-
-
     # GET STATUS
     module_id = 1  # MODULE_TELEPHOTO
     type_id = 0; #REQUEST

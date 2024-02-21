@@ -39,7 +39,7 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
     # TEST
     if (show_test):
       test_data = b'\x08\x01\x10\x01\x18\x01 \x03(\xfaU:\x1b\x09\xda\x01\xac\x95\xd6=\x04@\x11\xf7\x15R\x1b\xe8PV@\x1a\x07PolarisB$ff03aa11-5994-4857-a872-b41e8a3a5e51'
-      WsPacket_message = notify.WsPacket()
+      WsPacket_message = base__pb2.WsPacket()
       WsPacket_message.ParseFromString(test_data)
       my_logger.debug(">>")
       my_logger.debug("decode START GOTO PACKET >>")
