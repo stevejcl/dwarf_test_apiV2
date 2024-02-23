@@ -18,6 +18,14 @@ from lib.dwarf_utils import read_camera_format
 from lib.dwarf_utils import read_camera_count
 from lib.dwarf_utils import parse_ra_to_float
 from lib.dwarf_utils import parse_dec_to_float
+from lib.dwarf_utils import perfom_takeAstroPhoto
+from lib.dwarf_utils import perfom_stopAstroPhoto
+from lib.dwarf_utils import perfom_GoLive
+from lib.dwarf_utils import permform_update_camera_setting
+from lib.dwarf_utils import perform_get_all_camera_setting
+from lib.dwarf_utils import perform_get_all_feature_camera_setting
+from lib.data_utils import get_exposure_name_by_index
+from lib.data_utils import get_gain_name_by_index
 
 def display_menu():
     print("")
@@ -53,6 +61,9 @@ def display_menu_camera():
     print("C2. Input Camera Data to Config")
     print("C3. Read Current DwarfII Camera Data")
     print("C4. Import Saved Config Camera Data into DwarfII")
+    print("C5. Start Imaging Session")
+    print("C6. Stop Imaging Session")
+    print("C7. Go Live Action")
     print("0. Return")
 
 def get_user_choice():
@@ -64,7 +75,7 @@ def get_user_choice_test():
     return choice
 
 def get_user_choice_camera():
-    choice = input("Enter your choice (C1 to C4) or 0 to return to main menu: ")
+    choice = input("Enter your choice (C1 to C7) or 0 to return to main menu: ")
     return choice
 
 def option_1():
@@ -152,15 +163,168 @@ def option_C3():
     print("You selected Option C3. Read Current DwarfII Camera Data")
     print("")
     # Add your Option C3 functionality here
-    perform_decoding_test(True, False, False)
+    camera_exposure = False
+    camera_gain = False
+    camera_binning = False
+    camera_IR = False
+    camera_format = False
+    camera_count = False
+
+    result = perform_get_all_camera_setting()
+    result_feature = perform_get_all_feature_camera_setting()
+    print("------------------")
+
+    # ALL PARAMS
+    if (result):
+        # get Camera
+        target_id = 0
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result["all_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+           index_value = matching_entry["index"]
+
+           camera_exposure = str(get_exposure_name_by_index(index_value))
+           print("the exposition is: ", camera_exposure)
+        else:
+           print("the exposition has not been found")
+
+        # get Gain
+        target_id = 1
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result["all_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+           index_value = matching_entry["index"]
+
+           camera_gain = str(get_gain_name_by_index(index_value))
+           print("the gain is: ", camera_gain)
+        else:
+           print("the gain has not been found")
+
+        # get IR
+        target_id = 8
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result["all_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+            camera_IR = str(matching_entry["index"])
+
+            if (camera_IR == "0"):
+                print("the IR value is: IRCut")
+            else:
+                print("the IR value is: IRPass")
+        else:
+           print("the IRfilter has not been found")
+    else:
+       print("the exposition has not been found")
+       print("the gain has not been found")
+       print("the IRfilter has not been found")
+
+    # ALL FEATURE PARAMS
+    if result_feature : 
+        # get binning
+        target_id = 0
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result_feature["all_feature_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+            camera_binning = str(matching_entry["index"])
+            if (camera_binning == "0"):
+                print("the Binning value is 4k")
+            else:
+                print("the Binning value is 2k")
+        else:
+           print("the Binning value has not been found")
+
+        # get camera_format
+        target_id = 2
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result_feature["all_feature_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+            camera_format = str(matching_entry["index"])
+            if (camera_format == "0"):
+                print("the image format value is: FITS")
+            else:
+                print("the image format value is: TIFF")
+        else:
+           print("the image format value has not been found")
+
+        # get camera_count
+        target_id = 1
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result_feature["all_feature_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+            camera_count = str(round(matching_entry["continue_value"]))
+
+            print("the number of images for the session is:", camera_count)
+        else:
+           print("the number of images for the session has not been found")
+    else:
+       print("the Binning value has not been found")
+       print("the image format value has not been found")
+       print("the number of images for the session has not been found")
+
 
 def option_C4():
     print("You selected Option C4. Import Saved Config Camera Data into DwarfII")
     print("")
     # Add your Option C4 functionality here
-    perform_decoding_test(True, False, False)
+    if (camera_exposure := read_camera_exposure()):
+        print("the exposition is: ", camera_exposure)
+        permform_update_camera_setting("exposure", camera_exposure)
 
+    if (camera_gain := read_camera_gain()):
+        print("the gain is:", camera_gain)
+        permform_update_camera_setting("gain", camera_gain)
 
+    if (camera_IR := read_camera_IR()):
+        print("the IR value is:", camera_IR)
+        permform_update_camera_setting("IR", camera_IR)
+
+    if (camera_binning := read_camera_binning()):
+        print("the Binning value is:", camera_binning)
+        permform_update_camera_setting("binning", camera_binning)
+
+    if (camera_format := read_camera_format()):
+        print("the image format value is:", camera_format)
+        permform_update_camera_setting("fileFormat", camera_format)
+
+    if (camera_count := read_camera_count()):
+        print("the number of images for the session is:", camera_count)
+        permform_update_camera_setting("count", camera_count)
+
+def option_C5():
+    print("You selected Option C5. Start Imaging Session")
+    print("")
+    # Add your Option C5 functionality here
+    perfom_takeAstroPhoto()
+
+def option_C6():
+    print("You selected Option C6. Stop Imaging Session")
+    print("")
+    # Add your Option C6 functionality here
+    perfom_stopAstroPhoto()
+
+def option_C7():
+    print("You selected Option C7. Go Live Action")
+    print("")
+    # Add your Option C8 functionality here
+    perfom_GoLive()
 
 def option_20():
     print("You selected Option T1: Decoding Test Frames 1")
@@ -203,43 +367,88 @@ def input_data():
     update_config(user_longitude, user_latitude, user_timezone)
 
 def input_camera_data():
-    camera_exposure = input("Enter the desired exposition in seconds (0 = auto - 15), use fraction for less than 1s (ex: 1/10):")
-    if int(camera_exposure)<0 or int(camera_exposure) > 15:
+    prompt = "Enter the desired exposition in seconds (0 = auto - 15), use fraction for less than 1s (ex: 1/10):"
+    camera_exposure_init = read_camera_exposure()
+    camera_exposure = input(f"{prompt}[{camera_exposure_init}]:") if camera_exposure_init else input(prompt+"[1]")
+    if not camera_exposure and not camera_exposure_init:
+        camera_exposure = "1"
+        print("Set to Default:", camera_exposure)
+    elif int(camera_exposure)<0 or int(camera_exposure) > 15:
         print("Input Data Error:", camera_exposure)
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
-    else:
+    elif (camera_exposure):
         print("You entered:", camera_exposure)
-    camera_gain = input("Enter the desired gain between (0-240):")
-    if int(camera_gain)<0 or int(camera_gain) > 240:
+    elif (camera_exposure_init):
+        camera_exposure = camera_exposure_init
+        print("Saved value used:", camera_exposure)
+    else:
+        print("No value entered:")
+
+    camera_gain_init = read_camera_gain()
+    prompt = "Enter the desired gain between (0-240):"
+    camera_gain = input(f"{prompt}[{camera_gain_init}]:") if camera_gain_init else input(prompt+"[80]")
+    if not camera_gain and not camera_gain_init:
+        camera_gain = "80"
+        print("Set to Default:", camera_gain)
+    elif int(camera_gain)<0 or int(camera_gain) > 240:
         print("Input Data Error:", camera_gain)
         camera_gain = "80"
         print("Set to Default:", camera_gain)
-    else:
+    elif (camera_gain):
         print("You entered:", camera_gain)
-    camera_IR = input("Enter the desired IR value: 0 for IRCut, 1 for IRPass:")
-    if camera_IR!="0" and camera_IR !="1":
+    elif (camera_gain_init):
+        camera_gain = camera_gain_init
+        print("Saved value used:", camera_gain)
+    else:
+        print("No value entered:")
+
+    camera_IR_init = read_camera_IR()
+    prompt = "Enter the desired IR value: 0 for IRCut, 1 for IRPass:"
+    camera_IR = input(f"{prompt}[{camera_IR_init}]:") if camera_IR_init else input(prompt+"[IRCut]")
+    if not camera_IR and not camera_IR_init:
+        camera_IR = "0"
+        print("Set to Default (IRCut):", camera_IR)
+    elif camera_IR!="0" and camera_IR !="1":
         print("Input Data Error:", camera_IR)
         camera_IR = "0"
         print("Set to Default (IRCut):", camera_IR)
     else:
         print("You entered:", camera_IR)
-    camera_binning = input("Enter the desired Binning value: 0 for 4k, 1 for 2k:")
-    if camera_binning!="0" and camera_binning !="1":
+
+    camera_binning_init = read_camera_binning()
+    prompt = "Enter the desired Binning value: 0 for 4k, 1 for 2k:"
+    camera_binning = input(f"{prompt}[{camera_binning_init}]:") if camera_binning_init else input(prompt+"[4k]")
+    if not camera_binning and not camera_binning_init:
+        camera_binning = "0"
+        print("Set to Default (4k):", camera_binning)
+    elif camera_binning!="0" and camera_binning !="1":
         print("Input Data Error:", camera_binning)
         camera_binning = "0"
         print("Set to Default (4k):", camera_binning)
     else:
         print("You entered:", camera_binning)
-    camera_format = input("Enter the desired image format value: 0 for FITS, 1 for TIFF:")
-    if camera_format!="0" and camera_format !="1":
+
+    camera_format_init = read_camera_format()
+    prompt = "Enter the desired image format value: 0 for FITS, 1 for TIFF:"
+    camera_format = input(f"{prompt}[{camera_format_init}]:") if camera_format_init else input(prompt+"[FITS]")
+    if not camera_format and not camera_format_init:
+        camera_format = "0"
+        print("Set to Default (FITS):", camera_format)
+    elif camera_format!="0" and camera_format !="1":
         print("Input Data Error:", camera_format)
         camera_format = "0"
         print("Set to Default (FITS):", camera_format)
     else:
         print("You entered:", camera_format)
-    camera_count = input("Enter the desired number of images for the session between (1-999):")
-    if int(camera_count)<1 or int(camera_count) > 999:
+
+    camera_count_init = read_camera_count()
+    prompt = "Enter the desired number of images for the session between (1-999)"
+    camera_count = input(f"{prompt}[{camera_count_init}]:") if camera_count_init else input(prompt+"[999]")
+    if not camera_count and not camera_count_init:
+        camera_count = "999"
+        print("Set to Default:", camera_count)
+    elif int(camera_count)<1 or int(camera_count) > 999:
         print("Input Data Error:", camera_count)
         camera_count = "999"
         print("Set to Default:", camera_count)
@@ -248,18 +457,29 @@ def input_camera_data():
     update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning, camera_format, camera_count)
 
 def read_camera_data():
-    camera_exposure = read_camera_exposure()
-    print("the exposition is: ", camera_exposure)
-    camera_gain = read_camera_gain()
-    print("the gain is:", camera_gain)
-    camera_IR = read_camera_IR()
-    print("the IR value is:", camera_IR)
-    camera_binning = read_camera_binning()
-    print("the Binning value is:", camera_binning)
-    camera_format = read_camera_format()
-    print("the image format value is:", camera_format)
-    camera_count = read_camera_count()
-    print("the number of images for the session is:", camera_count)
+    print("The values in the Config File are : ")
+    print("-----------------------------------")
+    if (camera_exposure := read_camera_exposure()):
+        print("the exposition is: ", camera_exposure)
+    if (camera_gain := read_camera_gain()):
+        print("the gain is:", camera_gain)
+    if (camera_IR := read_camera_IR()):
+        if (camera_IR == "0"):
+            print("the IR value is: IRCut")
+        else:
+            print("the IR value is: IRPass")
+    if (camera_binning := read_camera_binning()):
+        if (camera_binning == "0"):
+            print("the Binning value is 4k")
+        else:
+            print("the Binning value is 2k")
+    if (camera_format := read_camera_format()):
+        if (camera_format == "0"):
+            print("the image format value is: FITS")
+        else:
+            print("the image format value is: TIFF")
+    if (camera_count := read_camera_count()):
+        print("the number of images for the session is:", camera_count)
 
 def input_test():
     user_longitude = input("Enter your Longitude: ")
@@ -274,16 +494,27 @@ def input_test():
 def input_manual_target():
     target_name = input("Enter a name for the target: ")
     print("You entered:", target_name)
-    manual_RA = input("Enter the Right Ascension (hr:mm:ss.s): ")
+    manual_RA = input("Enter the Right Ascension (hr:mm:ss.s) or decimal: ")
     print("You entered:", manual_RA)
-    print("Converted to:", parse_ra_to_float(manual_RA))
-    manual_declination = input("Enter the Declination (<sign>deg:mm:ss.s): ")
+    try:
+        decimal_RA = float(manual_RA)
+    except ValueError:
+        decimal_RA = parse_ra_to_float(manual_RA)
+    print("Converted to:", decimal_RA)
+    manual_declination = input("Enter the Declination (<sign>deg:mm:ss.s) or decimal: ")
     print("You entered:", manual_declination)
-    print("Converted to:", parse_dec_to_float(manual_declination))
+    try:
+        decimal_Dec = float(manual_declination)
+    except ValueError:
+        decimal_Dec = parse_ra_to_float(manual_declination)
+    print("Converted to:", decimal_Dec)
     print("")
-    # Convert to decimal value if not enterered
-    perform_goto(parse_ra_to_float(manual_RA), parse_dec_to_float(manual_declination), target_name)
-
+    go_goto = input("Press Enter to continue or 0 to exit: ")
+    if (go_goto !="0"):
+        # Convert to decimal value if not enterered
+        perform_goto(decimal_RA, decimal_Dec, target_name)
+    else:
+        exit
 
 def input_frame(masked):
     user_frame = input("Enter the wireshark capture frame payload data (option copy as C String): ")
@@ -346,12 +577,18 @@ def update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning,
     config.read('config.ini')
 
     # Update the value in the CONFIG section
-    config['CONFIG']['EXPOSURE'] = camera_exposure
-    config['CONFIG']['GAIN'] = camera_gain
-    config['CONFIG']['IRCUT'] = camera_IR
-    config['CONFIG']['BINNING'] = camera_binning
-    config['CONFIG']['FORMAT'] = camera_format
-    config['CONFIG']['COUNT'] = camera_count
+    if (camera_exposure):
+        config['CONFIG']['EXPOSURE'] = camera_exposure
+    if (camera_gain):
+        config['CONFIG']['GAIN'] = camera_gain
+    if (camera_IR):
+        config['CONFIG']['IRCUT'] = camera_IR
+    if (camera_binning):
+        config['CONFIG']['BINNING'] = camera_binning
+    if (camera_format):
+        config['CONFIG']['FORMAT'] = camera_format
+    if (camera_count):
+        config['CONFIG']['COUNT'] = camera_count
 
     with open('config.ini', 'w') as config_file:
         config.write(config_file)
@@ -425,6 +662,15 @@ def choice_camera():
 
         elif user_choice == 'C4':
             option_C4()
+
+        elif user_choice == 'C5':
+            option_C5()
+
+        elif user_choice == 'C6':
+            option_C6()
+
+        elif user_choice == 'C7':
+            option_C7()
 
         elif user_choice == '0':
             print("Return to the main menu")

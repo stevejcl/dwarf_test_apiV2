@@ -1,4 +1,5 @@
 import ast
+import re
 import proto.protocol_pb2 as protocol
 import proto.notify_pb2 as notify
 import proto.astro_pb2 as astro
@@ -184,8 +185,26 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
 
 
 def fct_decode_wireshark(user_frame, masked = False, user_maskedcode = ""):
-    # TEST
-    data_frame = ast.literal_eval(f'b{user_frame}') #user_frame.encode('latin-1')
+    # Use regular expression to find the desired substring
+    index = user_frame.find("\\x08\\x01\\x10\\x01\\x18\\x01")
+
+    if index == -1:
+        print("Not a valid frame.")
+        print("------------------")
+        return
+
+    if index != -1:
+        end_index = user_frame.rfind("\"")
+        if end_index != -1 and end_index > index:
+            desired_string = user_frame[index:end_index]
+            python_expression = "\""+ desired_string + "\""
+        else:
+            print("End of substring not found.")
+    else:
+        print("Substring not found.")
+
+    data_frame = ast.literal_eval(f'b{python_expression}') #user_frame.encode('latin-1')
+    print(data_frame)
 
     if (masked):
         # do something
@@ -214,6 +233,11 @@ def fct_decode_wireshark(user_frame, masked = False, user_maskedcode = ""):
             ComResponse_message = base__pb2.ComResponse()
             ComResponse_message.ParseFromString(WsPacket_message.data)
             my_logger.debug("receive data >>", ComResponse_message.code)
+        elif (WsPacket_message.type == 3):
+            ComResWithInt_message = base__pb2.ComResWithInt()
+            ComResWithInt_message.ParseFromString(WsPacket_message.data)
+            my_logger.debug("receive data >>", ComResWithInt_message.code)
+            my_logger.debug("receive data >>", ComResWithInt_message.value)
         else :
             ResNotifyStateAstroGoto_message = notify.ResNotifyStateAstroGoto()
             ResNotifyStateAstroGoto_message.ParseFromString(WsPacket_message.data)

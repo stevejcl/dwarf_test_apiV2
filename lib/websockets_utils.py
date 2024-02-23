@@ -44,12 +44,24 @@ def getAstroStateName(AstroStateCode):
         pass
     return ValueName
 
+def getOperationStateName(OperationStateCode):
+
+    try:
+        ValueName = notify.OperationState.Name(OperationStateCode)
+    except ValueError:
+        ValueName =""
+        pass
+    return ValueName
+
 class StopClientException(Exception):
     pass
 
 # new version protobuf enabled
 # use a Class
 class WebSocketClient:
+    # use init just once or after error connecting
+    Init_Send_TeleGetSystemWorkingState = True;
+
     def __init__(self, uri, client_id, message, command, type_id, module_id, ping_interval_task=5):
         self.websocket = False
         self.result = False
@@ -68,6 +80,10 @@ class WebSocketClient:
         self.stop_task = asyncio.Event()
         self.wait_pong = False
         self.stopcalibration = False
+        self.takePhotoStarted = False
+        self.AstroCapture = False
+        self.takePhotoCount = 0
+        self.takePhotoStacked = 0
 
         # TEST_CALIBRATION : Test Calibration Packet or Goto Packet
         # Test Mode : Calibration Packet => TEST_CALIBRATION = True
@@ -77,6 +93,16 @@ class WebSocketClient:
         if hasattr(config, 'TEST_CALIBRATION'):
             if(config.TEST_CALIBRATION):
                 self.modeCalibration = True
+
+    def initialize_once(self):
+        if WebSocketClient.Init_Send_TeleGetSystemWorkingState:
+            # Perform the initialization logic here
+            print("Initializing...")
+            
+            # Set the class variable to True to indicate it has been initialized
+            WebSocketClient.Init_Send_TeleGetSystemWorkingState = True
+        else:
+            print("Already initialized.")
 
     async def abort_tasks_timeout(self, timeout):
 
@@ -209,7 +235,7 @@ class WebSocketClient:
                                     self.stop_task.set()
                                     self.result = "ok"
                                     await asyncio.sleep(5)
-                                    print("Error CAMERA_TELE_GET_SYSTEM_WORKING_STATE CODE " + ComResponse_message.code)
+                                    print("Error CAMERA_TELE_GET_SYSTEM_WORKING_STATE CODE {getErrorCodeValueName(ComResponse_message.code)}")
                                 else:
                                     print("Continue OK CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE")
 
@@ -229,7 +255,7 @@ class WebSocketClient:
                                     self.stop_task.set()
                                     self.result = "ok"
                                     await asyncio.sleep(5)
-                                    print("Error CMD_CAMERA_TELE_OPEN_CAMERA CODE " + ComResponse_message.code)
+                                    print("Error CMD_CAMERA_TELE_OPEN_CAMERA CODE {getErrorCodeValueName(ComResponse_message.code)}")
                                 else:
                                     print("Continue OK CMD_CAMERA_TELE_OPEN_CAMERA")
 
@@ -371,7 +397,474 @@ class WebSocketClient:
                                     elif (ComResponse_message.code == protocol.CODE_STEP_MOTOR_LIMIT_POSITION_HITTED):
                                         print("Error GOTO CODE_STEP_MOTOR_LIMIT_POSITION_HITTED")
                                     else:
-                                        print("Error GOTO CODE " + ComResponse_message.code)
+                                        print(f"Error GOTO CODE {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING = 11005; // Start Capture
+                            elif (WsPacket_message.cmd==protocol.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING")
+                                my_logger.debug(f"receive data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+
+                                if (ComResponse_message.code == protocol.CODE_ASTRO_NEED_GOTO):
+                                    print("START_CAPTURE : ASTRO_NEED_GOTO message receive")
+                                elif (ComResponse_message.code == protocol.CODE_ASTRO_FUNCTION_BUSY):
+                                    print("START_CAPTURE : CODE_ASTRO_FUNCTION_BUSY message receive")
+                                    if (self.takePhotoStarted):
+                                        my_logger.debug(f"CAPTURE IN PROGRESS Continue ...")
+                                    else:
+                                        my_logger.debug(f"Error START_CAPTURE {ComResponse_message.code} >> EXIT")
+                                        # Signal the ping and receive functions to stop
+                                        self.stop_task.set()
+                                        self.result = ComResponse_message.code
+                                        await asyncio.sleep(5)
+                                        print(f"Error START_CAPTURE:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                elif (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error START_CAPTURE {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error START_CAPTURE:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    self.takePhotoStarted = True
+                            # CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING = 11006; // Stop Capture
+                            elif (WsPacket_message.cmd==protocol.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING")
+                                my_logger.debug(f"receive data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error STOP_CAPTURE {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error STOP_CAPTURE:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING = 15208 // Test Capture Ending
+                            elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING):
+                                ResNotifyOperationState_message = notify.ResNotifyOperationState()
+                                ResNotifyOperationState_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_NOTIFY_STATE_CAPTURE_RAW_LIVE_STACKING")
+                                my_logger.debug(f"receive notification data >> {ResNotifyOperationState_message.state}")
+                                my_logger.debug(f">> {getOperationStateName(ResNotifyOperationState_message.state)}")
+
+                                if ( self.command==protocol.CMD_ASTRO_GO_LIVE and ResNotifyOperationState_message.state == notify.OPERATION_STATE_IDLE):
+                                    my_logger.debug("ASTRO CAPTURE IDLE >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = "ok"
+                                    await asyncio.sleep(5)
+                                    print("Success ASTRO GO LIVE ENDING")
+
+                                if ( ResNotifyOperationState_message.state == notify.OPERATION_STATE_RUNNING):
+                                    my_logger.debug("ASTRO CAPTURE RUNNING")
+                                    self.takePhotoStarted = True
+
+                                # OPERATION_STATE_STOPPED = 3; // Stopped
+                                if ( self.AstroCapture and ResNotifyOperationState_message.state == notify.OPERATION_STATE_STOPPED):
+                                    my_logger.debug("ASTRO CAPTURE OK STOPPING >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = "ok"
+                                    await asyncio.sleep(5)
+                                    print("Success ASTRO CAPTURE ENDING")
+                            # CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING = 15209 // Test Capture Ending
+                            elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING):
+                                ResNotifyProgressCaptureRawLiveStacking_message = notify.ResNotifyProgressCaptureRawLiveStacking()
+                                ResNotifyProgressCaptureRawLiveStacking_message.ParseFromString(WsPacket_message.data)
+                                self.takePhotoStarted = True
+                                print("Decoding CMD_NOTIFY_PROGRASS_CAPTURE_RAW_LIVE_STACKING")
+                                my_logger.debug(f"receive notification target_name >> {ResNotifyProgressCaptureRawLiveStacking_message.target_name}")
+                                my_logger.debug(f"receive notification total_count >> {ResNotifyProgressCaptureRawLiveStacking_message.total_count}")
+                                update_count_type = ResNotifyProgressCaptureRawLiveStacking_message.update_count_type
+                                if (update_count_type == 0 or update_count_type == 2):
+                                   self.takePhotoCount = ResNotifyProgressCaptureRawLiveStacking_message.current_count
+                                if (update_count_type == 1 or update_count_type == 2):
+                                   self.takePhotoStacked = ResNotifyProgressCaptureRawLiveStacking_message.stacked_count
+                                my_logger.debug(f"receive notification current_count >> {self.takePhotoCount}")
+                                my_logger.debug(f"receive notification stacked_count >> {self.takePhotoStacked}")
+                            # CMD_CAMERA_TELE_SET_ALL_PARAMS
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_SET_ALL_PARAMS):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA SET ALL PARAMS {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error SET ALL PARAMS:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET FEATURE PARAM OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA SET ALL PARAMS:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_GET_ALL_PARAMS
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_ALL_PARAMS):
+                                common_param_instance = base__pb2.CommonParam()
+                                # Populate fields of common_param_instance
+                                ResGetAllParams_message = camera.ResGetAllParams()
+                                # Add common_param_instance to the repeated field all_params
+                                ResGetAllParams_message.all_params.append(common_param_instance)
+
+                                ResGetAllParams_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ResGetAllParams_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ResGetAllParams_message.code)}")
+                                if (ResGetAllParams_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET ALL_PARAMS {ResGetAllParams_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ResGetAllParams_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET ALL_PARAMS:  {getErrorCodeValueName(ResGetAllParams_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA GET ALL_PARAMS OK >> EXIT")
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+                                    # Create a dictionary to store the content
+                                    res_get_all_params_data = {
+                                        "all_params": [],
+                                        "code": ResGetAllParams_message.code
+                                    }
+                                    for common_param_instance in ResGetAllParams_message.all_params:
+                                        common_param_data = {
+                                            "hasAuto": common_param_instance.hasAuto,
+                                            "auto_mode": common_param_instance.auto_mode,
+                                            "id": common_param_instance.id,
+                                            "mode_index": common_param_instance.mode_index,
+                                            "index": common_param_instance.index,
+                                            "continue_value": common_param_instance.continue_value
+                                        }
+                                        res_get_all_params_data["all_params"].append(common_param_data)
+
+                                    self.result = res_get_all_params_data
+                                    print(f"Success CAMERA GET ALL_PARAMS")
+                            # CMD_CAMERA_TELE_SET_FEATURE_PARAM
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_SET_FEATURE_PARAM):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA FEATURE PARAM {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error SET FEATURE PARAM:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET FEATURE PARAM OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA SET FEATURE PARAM:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_GET_ALL_FEATURE_PARAMS
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_ALL_FEATURE_PARAMS):
+                                common_param_instance = base__pb2.CommonParam()
+                                # Populate fields of common_param_instance
+                                ResGetAllFeatureParams_message = camera.ResGetAllFeatureParams()
+                                # Add common_param_instance to the repeated field all_feature_params
+                                ResGetAllFeatureParams_message.all_feature_params.append(common_param_instance)
+
+                                ResGetAllFeatureParams_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ResGetAllFeatureParams_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ResGetAllFeatureParams_message.code)}")
+                                if (ResGetAllFeatureParams_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET ALL FEATURE PARAMS {ResGetAllFeatureParams_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ResGetAllFeatureParams_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET ALL FEATURE PARAMS:  {getErrorCodeValueName(ResGetAllFeatureParams_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA GET ALL FEATURE PARAMS OK >> EXIT")
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+                                    # Create a dictionary to store the content
+                                    res_get_all_params_data = {
+                                        "all_feature_params": [],
+                                        "code": ResGetAllFeatureParams_message.code
+                                    }
+                                    for common_param_instance in ResGetAllFeatureParams_message.all_feature_params:
+                                        common_param_data = {
+                                            "hasAuto": common_param_instance.hasAuto,
+                                            "auto_mode": common_param_instance.auto_mode,
+                                            "id": common_param_instance.id,
+                                            "mode_index": common_param_instance.mode_index,
+                                            "index": common_param_instance.index,
+                                            "continue_value": common_param_instance.continue_value
+                                        }
+                                        res_get_all_params_data["all_feature_params"].append(common_param_data)
+
+                                    self.result = res_get_all_params_data
+                                    print(f"Success CAMERA GET ALL FEATURE PARAMS")
+                            # CMD_CAMERA_TELE_SET_EXP_MODE
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_SET_EXP_MODE):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA SET EXP MODE {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA SET EXP MODE:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET EXP MODE OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA SET EXP MODE:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_SET_EXP
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_SET_EXP):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA SET EXP {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA SET EXP:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET EXP OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA SET EXP:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_GET_EXP
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_EXP and WsPacket_message.type == 3):
+                                ComResponseWithDouble_message = base__pb2.ComResWithDouble()
+                                ComResponseWithDouble_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponseWithDouble_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponseWithDouble_message.code)}")
+                                if (ComResponseWithDouble_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET EXP {ComResponseWithDouble_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponseWithDouble_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET EXP:  {getErrorCodeValueName(ComResponseWithDouble_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA GET EXP OK >> EXIT")
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+                                    self.result = str(ComResponseWithDouble_message.value)
+                                    print(f"Success CAMERA GET EXP:  {ComResponseWithDouble_message.value}")
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_EXP):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET EXP {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET EXP:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET EXP OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA GET EXP:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_SET_GAIN
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_SET_GAIN):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA SET GAIN {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA SET GAIN:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET GAIN OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA SET GAIN:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_GET_GAIN
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_GAIN and WsPacket_message.type == 3):
+                                ComResWithInt_message = base__pb2.ComResWithInt()
+                                ComResWithInt_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResWithInt_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                if (ComResWithInt_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET GAIN {ComResWithInt_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResWithInt_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET GAIN:  {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA GET GAIN OK >> EXIT")
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+                                    self.result = str(ComResWithInt_message.value)
+                                    print(f"Success CAMERA GET GAIN:  {ComResWithInt_message.value}")
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_GAIN):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET GAIN {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET GAIN:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET GAIN OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA GET GAIN:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_GET_GAIN MODE
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_GAIN_MODE and WsPacket_message.type == 3):
+                                ComResWithInt_message = base__pb2.ComResWithInt()
+                                ComResWithInt_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResWithInt_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                if (ComResWithInt_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET GAIN MODE {ComResWithInt_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResWithInt_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET GAIN MODE:  {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA GET GAIN MODE OK >> EXIT")
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+                                    self.result = str(ComResWithInt_message.value)
+                                    print(f"Success CAMERA GET GAIN MODE:  {ComResWithInt_message.value}")
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_GAIN_MODE):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET GAIN MODE {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET GAIN MODE:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET GAIN MODE OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA GET GAIN MODE:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            # CMD_CAMERA_TELE_GET_BRIGHTNESS
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_BRIGHTNESS and WsPacket_message.type == 3):
+                                ComResWithInt_message = base__pb2.ComResWithInt()
+                                ComResWithInt_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResWithInt_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                if (ComResWithInt_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET BRIGHTNESS {ComResWithInt_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResWithInt_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET BRIGHTNESS:  {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA GET BRIGHTNESS MODE OK >> EXIT")
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+                                    self.result = str(ComResWithInt_message.value)
+                                    print(f"Success CAMERA GET BRIGHTNESS:  {ComResWithInt_message.value}")
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_SET_IRCUT):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA SET IRCUT {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA SET IRCUT:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET IRCUT OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA SET IRCUT:  {getErrorCodeValueName(ComResponse_message.code)}")
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_IRCUT and WsPacket_message.type == 3):
+                                ComResWithInt_message = base__pb2.ComResWithInt()
+                                ComResWithInt_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResWithInt_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                if (ComResWithInt_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET IRCUT {ComResWithInt_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResWithInt_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET IRCUT:  {getErrorCodeValueName(ComResWithInt_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA GET IRCUT OK >> EXIT")
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+                                    self.result = str(ComResWithInt_message.value)
+                                    print(f"Success CAMERA GET IRCUT:  {ComResWithInt_message.value}")
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_IRCUT):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+                                my_logger.debug(f"receive request response data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CAMERA GET IRCUT {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Error CAMERA GET IRCUT:  {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    my_logger.debug("CAMERA SET GRCUT OK >> EXIT")
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print(f"Success CAMERA GET IRCUT:  {getErrorCodeValueName(ComResponse_message.code)}")
                             # Unknown
                             elif (WsPacket_message.cmd != self.command):
                                 if( WsPacket_message.type == 0):
@@ -430,12 +923,12 @@ class WebSocketClient:
         minor_version = 1
         device_id = 1  # DWARF II
         self.target_name = ""
+        #self.takePhotoStarted = False
 
         if not self.websocket:
             print("Error No WebSocket in send_message")
+            WebSocketClient.Init_Send_TeleGetSystemWorkingState = False
             return
-
-        Send_TeleGetSystemWorkingState = True
 
         #CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE
         WsPacket_messageTeleGetSystemWorkingState = base__pb2.WsPacket()
@@ -480,7 +973,7 @@ class WebSocketClient:
             # Send Command
             await asyncio.sleep(0.02)
 
-            if (Send_TeleGetSystemWorkingState):
+            if (WebSocketClient.Init_Send_TeleGetSystemWorkingState):
                 await self.websocket.send(WsPacket_messageTeleGetSystemWorkingState.SerializeToString())
                 print("#----------------#")
                 my_logger.debug(f"Send cmd >> {WsPacket_messageTeleGetSystemWorkingState.cmd}")
@@ -499,7 +992,8 @@ class WebSocketClient:
 
                 my_logger.debug(f"Send type >> {WsPacket_messageCameraTeleOpen.type}")
                 my_logger.debug(f"msg data len is >> {len(WsPacket_messageCameraTeleOpen.data)}")
-                print("Sendind End ....");  
+                print("Sendind End ....");
+                WebSocketClient.Init_Send_TeleGetSystemWorkingState = False
 
             await asyncio.sleep(1)
 
@@ -516,6 +1010,10 @@ class WebSocketClient:
             if (self.command == protocol.CMD_ASTRO_START_CALIBRATION):
                 self.stopcalibration = False
 
+            # Special ASTRO START or STOP CAPTURE
+            if ( self.command == protocol.CMD_ASTRO_START_CAPTURE_RAW_LIVE_STACKING or self.command == protocol.CMD_ASTRO_STOP_CAPTURE_RAW_LIVE_STACKING):
+                self.AstroCapture = True
+
             my_logger.debug(f"Send type >> {WsPacket_message.type}")
             my_logger.debug(f"Send message >> {self.message}")
             my_logger.debug(f"msg data len is >> {len(WsPacket_message.data)}")
@@ -524,6 +1022,7 @@ class WebSocketClient:
         except Exception as e:
             # Handle other exceptions
             print(f"Unhandled exception1: {e}")
+            WebSocketClient.Init_Send_TeleGetSystemWorkingState = False
         finally:
             # Perform cleanup if needed
             print("TERMINATING Sending function.")
@@ -648,6 +1147,7 @@ def start_socket(message, command, type_id, module_id, uri=config.DWARF_IP, clie
     try:
         # Create an instance of WebSocketClient
         client_instance = WebSocketClient(websocket_uri, client_id, message, command, type_id, module_id, ping_interval_task)
+        client_instance.initialize_once()
 
         # Call the start method to initiate the WebSocket connection and tasks
         asyncio.run(client_instance.start())
