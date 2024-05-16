@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+//ask
+message ReqGetconfig {
+     int32 cmd = 1; //CMD instruction value is 1
+     string ble_psd = 2; //Default: "DWARF_12345678"
+}
+
+message ReqAp {
+     int32 cmd = 1; //CMD instruction value is 2
+     int32 wifi_type = 2; //0-5G 1-2.4G
+     int32 auto_start = 3; //WiFi startup configuration 0-Does not start at startup 1-Start at startup
+     int32 country_list = 4; //0-Do not configure country_list 1-Configure country_list
+     string country = 5; //Country code
+     string ble_psd = 6; //Default: "DWARF_12345678"
+}
+
+message ReqSta {
+     int32 cmd =1; //CMD instruction value is 3
+     int32 auto_start = 2; //WiFi startup configuration 0-Does not start at startup 1-Start at startup
+     string ble_psd = 3; //Default: "DWARF_12345678"
+     string ssid = 4; //WiFi name of the router to be connected
+     string psd = 5; //WiFi password of the router to be connected
+}
+
+message ReqSetblewifi {
+     int32 cmd = 1; //CMD instruction value is 4
+     int32 mode = 2; //Modification type 0-Bluetooth name 1-Bluetooth naming 2-wifi name 3-wifi password
+     string ble_psd = 3; //Default: "DWARF_12345678"
+     string value = 4; //modified value
+}
+
+message ReqReset {
+     int32 cmd = 1; //CMD instruction value is 5
+}
+
+message ReqGetwifilist {
+     int32 cmd = 1; //CMD instruction value is 6
+}
+
+message ReqGetsysteminfo {
+     int32 cmd = 1; //CMD instruction value is 7
+}
+
+message ReqCheckFile {
+     int32 cmd = 1; //CMD instruction value is 8
+     string file_path = 2; //File path
+     string md5 = 3; //md5 value
+}
+
+
+//return
+message ResGetconfig {
+     int32 cmd = 1; //CMD instruction value is 1
+     int32 code = 2; //error code
+     int32 state = 3; //WiFi configuration status 0-Not configured 1-Configuring 2-Configuration completed
+     int32 wifi_mode = 4; //WiFi mode 0-NONE 1-AP 2-STA
+     int32 ap_mode = 5; //AP mode WiFi type 0-5G 1-2.4G
+     int32 auto_start = 6; //WiFi startup configuration 0-Does not start at startup 1-Start at startup
+     int32 ap_country_list = 7; //Country code configuration file settings 0-Set country_list 1-Do not set country_list
+     string ssid = 8; //WiFi name
+     string psd = 9; //WiFi password
+     string ip = 10; //WiFi ip address
+     string ap_country = 11; //Country code
+}
+
+message ResAp {
+     int32 cmd = 1; //CMD instruction
+     int32 code = 2; //error code
+     int32 mode = 3; //AP mode WiFi type 0-5G 1-2.4G
+     string ssid = 4; //WiFi name
+     string psd = 5; //WiFi password
+}
+
+message ResSta {
+     int32 cmd = 1; //CMD instruction
+     int32 code = 2; //error code
+     string ssid = 3; //WiFi name
+     string psd = 4; //WiFi password
+     string ip = 5; //WiFi ip address
+}
+
+message ResSetblewifi {
+     int32 cmd = 1; //CMD instruction
+     int32 code = 2; //error code
+     int32 mode = 3; //Modification type 0-Bluetooth name 1-Bluetooth naming 2-wifi name 3-wifi password
+     string value = 4; //modified value
+}
+
+message ResReset {
+     int32 cmd = 1; //CMD instruction
+     int32 code = 2; //error code
+}
+
+message ResWifilist {
+     int32 cmd = 1; //CMD instruction
+     int32 code = 2; //error code
+     repeated string ssid = 4;
+}
+
+message ResGetsysteminfo {
+     int32 cmd = 1; //CMD instruction
+     int32 code = 2; //error code
+     int32 protocol_version = 3; //Bluetooth protocol
+     string device = 4; //Device name
+     string mac_address = 5; //MAC address
+     string dwarf_ota_version = 6; //dwarf firmware version
+}
+
+message ResReceiveDataError {
+     int32 cmd = 1; //CMD instruction is 0
+     int32 code = 2; //error code
+}
+
+message ResCheckFile {
+     int32 cmd = 1; //CMD instruction
+     int32 code = 2; //error code
+}
+

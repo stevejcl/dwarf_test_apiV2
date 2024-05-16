@@ -1,4 +1,5 @@
 import configparser
+import re
 from datetime import datetime
 
 from lib.dwarf_utils import perform_goto
@@ -24,8 +25,18 @@ from lib.dwarf_utils import perfom_GoLive
 from lib.dwarf_utils import permform_update_camera_setting
 from lib.dwarf_utils import perform_get_all_camera_setting
 from lib.dwarf_utils import perform_get_all_feature_camera_setting
+from lib.dwarf_utils import set_HostMaster
+from lib.dwarf_utils import read_bluetooth_ble_wifi_type
+from lib.dwarf_utils import read_bluetooth_autoAP
+from lib.dwarf_utils import read_bluetooth_country_list
+from lib.dwarf_utils import read_bluetooth_country
+from lib.dwarf_utils import read_bluetooth_ble_psd
+from lib.dwarf_utils import read_bluetooth_autoSTA
+from lib.dwarf_utils import read_bluetooth_ble_STA_ssid
+from lib.dwarf_utils import read_bluetooth_ble_STA_pwd
 from lib.data_utils import get_exposure_name_by_index
 from lib.data_utils import get_gain_name_by_index
+from connect_bluetooth import connect_bluetooth
 
 def display_menu():
     print("")
@@ -40,7 +51,9 @@ def display_menu():
     print("8. Send GoTo Jupiter")
     print("9. Send GoTo Manual Target")
     print("10. Input Longitude & Latitude")
+    print("11. Set HOST MASTER")
     print("C. Camera Data Function")
+    print("B. Bluetooth Functions")
     print("T. Test Frames Decoding")
     print("0. Exit")
 
@@ -66,8 +79,16 @@ def display_menu_camera():
     print("C7. Go Live Action")
     print("0. Return")
 
+def display_menu_bluetooth():
+    print("")
+    print("------------------")
+    print("C. connect Bluetooth and Start STA Mode")
+    print("R. Read Bluetooth Param Config Information")
+    print("S. Save Bluetooth Param Config Information")
+    print("0. Return")
+
 def get_user_choice():
-    choice = input("Enter your choice (1-9) or (T1 to T4) or D or 0 to exit: ")
+    choice = input("Enter your choice (1-11) or (B,C,T) or 0 to exit: ")
     return choice
 
 def get_user_choice_test():
@@ -76,6 +97,10 @@ def get_user_choice_test():
 
 def get_user_choice_camera():
     choice = input("Enter your choice (C1 to C7) or 0 to return to main menu: ")
+    return choice
+
+def get_user_choice_bluetooth():
+    choice = input("Enter your choice C,R,S or 0 to return to main menu: ")
     return choice
 
 def option_1():
@@ -123,29 +148,39 @@ def option_7():
 def option_8():
     print("You selected Option 8: Send GoTo Jupiter")
     print("")
-    # Add your Option 3 functionality here
+    # Add your Option 8 functionality here
     select_solar_target("Jupiter")
 
 def option_9():
     print("You selected Option 9: Manual Target")
     print("")
-    # Add your Option 3 functionality here
+    # Add your Option 9 functionality here
     input_manual_target()
 
 def option_10():
     print("You selected Option 10: Input Data : Longitude, Latitude and TimeZone")
     input_data()
-    # Add your Option 3 functionality here
+    # Add your Option 10 functionality here
+
+def option_11():
+    print("You selected Option 11: Set HOST MASTER")
+    set_HostMaster()
+    # Add your Option 11 functionality here
 
 def option_C():
     print("You selected Option C: Camera Data function")
     choice_camera()
+    # Add your Option C functionality here
+
+def option_B():
+    print("You selected Option B: Bluetooth Functions")
+    choice_bluetooth()
     # Add your Option 3 functionality here
 
 def option_T():
     print("You selected Option T: Do Tests..")
     choice_test()
-    # Add your Option 3 functionality here
+    # Add your Option T functionality here
 
 def option_C1():
     print("You selected Option C1. Read Saved Config Camera Data")
@@ -326,6 +361,24 @@ def option_C7():
     # Add your Option C8 functionality here
     perfom_GoLive()
 
+def option_BC():
+    print("You selected Option C. connect Bluetooth and Start STA Mode")
+    print("")
+    # Add your Option C11 functionality here
+    connect_bluetooth()
+
+def option_BR():
+    print("You selected Option R. Read Bluetooth Param Config Information")
+    print("")
+    # Add your Option C11 functionality here
+    read_bluetooth_data()
+
+def option_BS():
+    print("You selected Option S. Save Bluetooth Param Config Information")
+    print("")
+    # Add your Option C2 functionality here
+    input_bluetooth_data()
+
 def option_20():
     print("You selected Option T1: Decoding Test Frames 1")
     print("")
@@ -354,7 +407,7 @@ def option_24():
     print("You selected Option D. Decoding Unmasked Wireshark Frame")
     print("")
     # Add your Option D1 functionality here
-    input_frame(False)
+    return input_frame(False)
 
 def input_data():
     user_longitude = input("Enter your Longitude: ")
@@ -373,7 +426,7 @@ def input_camera_data():
     if not camera_exposure and not camera_exposure_init:
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
-    elif int(camera_exposure)<0 or int(camera_exposure) > 15:
+    elif camera_exposure and (int(camera_exposure)<0 or int(camera_exposure) > 15):
         print("Input Data Error:", camera_exposure)
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
@@ -391,7 +444,7 @@ def input_camera_data():
     if not camera_gain and not camera_gain_init:
         camera_gain = "80"
         print("Set to Default:", camera_gain)
-    elif int(camera_gain)<0 or int(camera_gain) > 240:
+    elif camera_gain and (int(camera_gain)<0 or int(camera_gain) > 240):
         print("Input Data Error:", camera_gain)
         camera_gain = "80"
         print("Set to Default:", camera_gain)
@@ -409,7 +462,7 @@ def input_camera_data():
     if not camera_IR and not camera_IR_init:
         camera_IR = "0"
         print("Set to Default (IRCut):", camera_IR)
-    elif camera_IR!="0" and camera_IR !="1":
+    elif camera_IR and (camera_IR!="0" and camera_IR !="1"):
         print("Input Data Error:", camera_IR)
         camera_IR = "0"
         print("Set to Default (IRCut):", camera_IR)
@@ -422,7 +475,7 @@ def input_camera_data():
     if not camera_binning and not camera_binning_init:
         camera_binning = "0"
         print("Set to Default (4k):", camera_binning)
-    elif camera_binning!="0" and camera_binning !="1":
+    elif camera_binning and (camera_binning!="0" and camera_binning !="1"):
         print("Input Data Error:", camera_binning)
         camera_binning = "0"
         print("Set to Default (4k):", camera_binning)
@@ -435,7 +488,7 @@ def input_camera_data():
     if not camera_format and not camera_format_init:
         camera_format = "0"
         print("Set to Default (FITS):", camera_format)
-    elif camera_format!="0" and camera_format !="1":
+    elif camera_format and (camera_format!="0" and camera_format !="1"):
         print("Input Data Error:", camera_format)
         camera_format = "0"
         print("Set to Default (FITS):", camera_format)
@@ -448,7 +501,7 @@ def input_camera_data():
     if not camera_count and not camera_count_init:
         camera_count = "999"
         print("Set to Default:", camera_count)
-    elif int(camera_count)<1 or int(camera_count) > 999:
+    elif camera_count and (int(camera_count)<1 or int(camera_count) > 999):
         print("Input Data Error:", camera_count)
         camera_count = "999"
         print("Set to Default:", camera_count)
@@ -480,6 +533,163 @@ def read_camera_data():
             print("the image format value is: TIFF")
     if (camera_count := read_camera_count()):
         print("the number of images for the session is:", camera_count)
+
+def input_bluetooth_data():
+    prompt = "Enter the desired AP wifi type  (0 = 5G (defaut), 1 = 2.4G) "
+    ble_wifi_type_init = read_bluetooth_ble_wifi_type()
+    ble_wifi_type = input(f"{prompt}[{ble_wifi_type_init}]:") if ble_wifi_type_init else input(prompt+"[0]")
+    if not ble_wifi_type and not ble_wifi_type_init:
+        ble_wifi_type = "0"
+        print("Set to Default:", ble_wifi_type)
+    elif ble_wifi_type and (int(ble_wifi_type)<0 or int(ble_wifi_type) > 1):
+        print("Input Data Error:", ble_wifi_type)
+        ble_wifi_type = "0"
+        print("Set to Default:", ble_wifi_type)
+    elif (ble_wifi_type):
+        print("You entered:", ble_wifi_type)
+    elif (ble_wifi_type_init):
+        ble_wifi_type = ble_wifi_type_init
+        print("Saved value used:", ble_wifi_type)
+    else:
+        print("No value entered:")
+
+    prompt = "Enter the desired AP auto start  (0 = boot not start (defaut), 1 = boot start) "
+    ble_autoAP_init = read_bluetooth_autoAP()
+    ble_autoAP = input(f"{prompt}[{ble_autoAP_init}]:") if ble_autoAP_init else input(prompt+"[0]")
+    if not ble_autoAP and not ble_autoAP_init:
+        ble_autoAP = "0"
+        print("Set to Default:", ble_autoAP)
+    elif ble_autoAP and (int(ble_autoAP)<0 or int(ble_autoAP) > 1):
+        print("Input Data Error:", ble_autoAP)
+        ble_autoAP = "0"
+        print("Set to Default:", ble_autoAP)
+    elif (ble_autoAP):
+        print("You entered:", ble_autoAP)
+    elif (ble_autoAP_init):
+        ble_autoAP = ble_autoAP_init
+        print("Saved value used:", ble_autoAP)
+    else:
+        print("No value entered:")
+
+    prompt = "Enter the desired Contry List config set  (0 = don't configure (defaut), 1 = configure) "
+    ble_country_list_init = read_bluetooth_country_list()
+    ble_country_list = input(f"{prompt}[{ble_country_list_init}]:") if ble_country_list_init else input(prompt+"[0]")
+    if not ble_country_list and not ble_country_list_init:
+        ble_country_list = "0"
+        print("Set to Default:", ble_country_list)
+    elif ble_country_list and (int(ble_country_list)<0 or int(ble_country_list) > 1):
+        print("Input Data Error:", ble_country_list)
+        ble_country_list = "0"
+        print("Set to Default:", ble_country_list)
+    elif (ble_country_list):
+        print("You entered:", ble_country_list)
+    elif (ble_country_list_init):
+        ble_country_list = ble_country_list_init
+        print("Saved value used:", ble_country_list)
+    else:
+        print("No value entered:")
+
+    prompt = "Enter the desired Contry "
+    ble_country_init = read_bluetooth_country()
+    ble_country = input(f"{prompt}[{ble_country_init}]:") if ble_country_init else input(prompt)
+    if not ble_country and not ble_country_init:
+        ble_country = ""
+    elif (ble_country):
+        print("You entered:", ble_country)
+    elif (ble_country_init):
+        ble_country = ble_country_init
+        print("Saved value used:", ble_country)
+    else:
+        print("No value entered:")
+
+    prompt = "Enter the desired ble Password: "
+    ble_psd_init = read_bluetooth_ble_psd()
+    ble_psd = input(f"{prompt}[{ble_psd_init}]:") if ble_psd_init else input(prompt+"[DWARF_12345678]")
+    if not ble_psd and not ble_psd_init:
+        ble_psd = "DWARF_12345678"
+        print("Set to Default:", ble_psd)
+    elif (ble_psd):
+        print("You entered:", ble_psd)
+    elif (ble_psd_init):
+        ble_psd = ble_psd_init
+        print("Saved value used:", ble_psd)
+    else:
+        print("No value entered:")
+
+    prompt = "Enter the desired STA auto start  (0 = boot not start (defaut), 1 = boot start) "
+    ble_autoSTA_init = read_bluetooth_ble_wifi_type()
+    ble_autoSTA = input(f"{prompt}[{ble_autoSTA_init}]:") if ble_autoSTA_init else input(prompt+"[0]")
+    if not ble_autoSTA and not ble_autoSTA_init:
+        ble_autoSTA = "0"
+        print("Set to Default:", ble_autoSTA)
+    elif ble_autoSTA and (int(ble_autoSTA)<0 or int(ble_autoSTA) > 1):
+        print("Input Data Error:", ble_autoSTA)
+        ble_autoSTA = "0"
+        print("Set to Default:", ble_autoSTA)
+    elif (ble_autoSTA):
+        print("You entered:", ble_autoSTA)
+    elif (ble_autoSTA_init):
+        ble_autoSTA = ble_autoSTA_init
+        print("Saved value used:", ble_autoSTA)
+    else:
+        print("No value entered:")
+
+    prompt = "Enter the desired STA ssid "
+    ble_STA_ssid_init = read_bluetooth_ble_STA_ssid()
+    ble_STA_ssid = input(f"{prompt}[{ble_STA_ssid_init}]:") if ble_STA_ssid_init else input(prompt)
+    if (ble_STA_ssid):
+        print("You entered:", ble_STA_ssid)
+    elif (ble_STA_ssid_init):
+        ble_STA_ssid = ble_STA_ssid_init
+        print("Saved value used:", ble_STA_ssid)
+    else:
+        print("No value entered:")
+
+    prompt = "Enter the desired STA Password "
+    ble_STA_pwd_init = read_bluetooth_ble_STA_pwd()
+    ble_STA_pwd = input(f"{prompt}[{ble_STA_pwd_init}]:") if ble_STA_pwd_init else input(prompt)
+    if (ble_STA_pwd):
+        print("You entered:", ble_STA_pwd)
+    elif (ble_STA_pwd_init):
+        ble_STA_pwd = ble_STA_pwd_init
+        print("Saved value used:", ble_STA_pwd)
+    else:
+        print("No value entered:")
+
+    update_bluetoothconfig(ble_wifi_type, ble_autoAP, ble_country_list, ble_country, ble_psd, ble_autoSTA, ble_STA_ssid, ble_STA_pwd)
+    update_htmlfile(ble_psd, ble_STA_ssid, ble_STA_pwd)
+
+def read_bluetooth_data():
+    print("The values in the Config File are : ")
+    print("-----------------------------------")
+    if (ble_wifi_type := read_bluetooth_ble_wifi_type()):
+        if (ble_wifi_type == "0"):
+            print("the AP wifi type is: 5G")
+        else:
+            print("the AP wifi type is: 2.4G")
+    if (ble_autoAP := read_bluetooth_autoAP()):
+        if (ble_autoAP == "0"):
+            print("the AP auto start value is: boot not start")
+        else:
+            print("the AP auto start value: boot start")
+    if (ble_country_list := read_bluetooth_country_list()):
+        if (ble_country_list == "0"):
+            print("the Contry List config set value is: don't configure")
+        else:
+            print("the Contry List config set value: configure")
+    if (ble_country := read_bluetooth_country()):
+        print("the country is: ", ble_country)
+    if (ble_psd := read_bluetooth_ble_psd()):
+        print("the ble Password is: ", ble_psd)
+    if (ble_autoSTA := read_bluetooth_autoSTA()):
+        if (ble_autoSTA == "0"):
+            print("the STA auto start value is: boot not start")
+        else:
+            print("the STA auto start value: boot start")
+    if (ble_STA_ssid := read_bluetooth_ble_STA_ssid()):
+        print("the STA ssid is: ", ble_STA_ssid)
+    if (ble_STA_pwd := read_bluetooth_ble_STA_pwd()):
+        print("the STA Password is: ", ble_STA_pwd)
 
 def input_test():
     user_longitude = input("Enter your Longitude: ")
@@ -517,13 +727,18 @@ def input_manual_target():
         exit
 
 def input_frame(masked):
-    user_frame = input("Enter the wireshark capture frame payload data (option copy as C String): ")
+    user_frame = input("Enter the wireshark capture frame payload data (option copy as C String) or 0 to return to previous menu: ")
     user_maskedcode = ""
-    print("You entered:", user_frame)
-    if (masked):
-        user_maskedcode = input("Enter the masked code: ")
-        print("You entered:", user_maskedcode)
-    perform_decode_wireshark(user_frame, masked, user_maskedcode)
+    if (user_frame == "0"):
+      return '0'
+    else:
+      print("You entered:", user_frame)
+      if (masked):
+          user_maskedcode = input("Enter the masked code: ")
+          print("You entered:", user_maskedcode)
+      perform_decode_wireshark(user_frame, masked, user_maskedcode)
+      input_frame(masked)
+      return ''
 
 def select_solar_target (target):
    
@@ -593,6 +808,67 @@ def update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning,
     with open('config.ini', 'w') as config_file:
         config.write(config_file)
 
+def update_bluetoothconfig(ble_wifi_type, ble_autoAP, ble_country_list, ble_country, ble_psd, ble_autoSTA, ble_STA_ssid, ble_STA_pwd):
+
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    # Update the value in the CONFIG section
+    if (ble_wifi_type):
+        config['CONFIG']['BLE_WIFI_TYPE'] = ble_wifi_type
+    if (ble_autoAP):
+        config['CONFIG']['BLE_AUTO_AP'] = ble_autoAP
+    if (ble_country_list):
+        config['CONFIG']['BLE_COUNTRY_LIST'] = ble_country_list
+    if (ble_country):
+        config['CONFIG']['BLE_COUNTRY'] = ble_country
+    if (ble_psd):
+        config['CONFIG']['BLE_PSD'] = ble_psd
+    if (ble_autoSTA):
+        config['CONFIG']['BLE_AUTO_STA'] = ble_autoSTA
+    if (ble_STA_ssid):
+        config['CONFIG']['BLE_STA_SSID'] = ble_STA_ssid
+    if (ble_STA_pwd):
+        config['CONFIG']['BLE_STA_PWD'] = ble_STA_pwd
+
+    with open('config.ini', 'w') as config_file:
+        config.write(config_file)
+
+def update_htmlfile(ble_psd, ble_STA_ssid, ble_STA_pwd):
+
+  # Specify the path to your HTML file
+  html_file_path = 'connect_dwarf.html'
+
+  # Read the HTML file
+  with open(html_file_path, 'r') as html_file:
+    lines = html_file.readlines()
+
+  # Define the pattern to match JavaScript variable assignments
+  pattern1 = re.compile(r'let BluetoothPWD = ".*?";')
+  pattern2 = re.compile(r'let BleSTASSIDDwarf = ".*?";')
+  pattern3 = re.compile(r'let BleSTAPWDDwarf = ".*?";')
+
+  # Loop through each line and replace the target line if found
+  modified_lines = []
+  for line in lines:
+    if pattern1.match(line):
+      # Replace the line with the new variable assignment
+      modified_lines.append(f'let BluetoothPWD = "{ble_psd}";\n')
+    elif pattern2.match(line):
+      # Replace the line with the new variable assignment
+      modified_lines.append(f'let BleSTASSIDDwarf = "{ble_STA_ssid}";\n')
+    elif pattern3.match(line):
+      # Replace the line with the new variable assignment
+      modified_lines.append(f'let BleSTAPWDDwarf = "{ble_STA_pwd}";\n')
+    else:
+      modified_lines.append(line)
+
+  # Write the modified content back to the HTML file
+  with open(html_file_path, 'w') as html_file:
+    html_file.writelines(modified_lines)
+
+  print("The Html file to connect to Bluetooth has been updated  accordingly")
+
 def perform_goto_target(target):
     # Inverse LONGITUDE for DwarfII !!!!!!!
     ra = None
@@ -637,7 +913,8 @@ def choice_test():
             option_23()
 
         elif user_choice == 'D':
-            option_24()
+            if (option_24() == '0'):
+              break
 
         elif user_choice == '0':
             print("Return to the main menu")
@@ -679,6 +956,27 @@ def choice_camera():
         else:
             print("Invalid choice. Please enter a correct value.")
 
+def choice_bluetooth():
+    while True:
+        display_menu_bluetooth()
+        user_choice = get_user_choice_bluetooth()
+
+        if user_choice == 'C':
+            option_BC()
+
+        elif user_choice == 'R':
+            option_BR()
+
+        elif user_choice == 'S':
+            option_BS()
+
+        elif user_choice == '0':
+            print("Return to the main menu")
+            break
+
+        else:
+            print("Invalid choice. Please enter a correct value.")
+
 def main():
     while True:
         display_menu()
@@ -711,8 +1009,17 @@ def main():
         elif user_choice == '9':
             option_9()
 
+        elif user_choice == '10':
+            option_10()
+
+        elif user_choice == '11':
+            option_11()
+
         elif user_choice == 'C':
             option_C()
+
+        elif user_choice == 'B':
+            option_B()
 
         elif user_choice == 'T':
             option_T()

@@ -219,6 +219,34 @@ class WebSocketClient:
                                 else:
                                     print("Continue Decoding CMD_NOTIFY_WS_HOST_SLAVE_MODE")
 
+                            # CMD_SYSTEM_SET_HOSTSLAVE_MODE = 13004; // Set HOST mode
+                            if (WsPacket_message.cmd==protocol.CMD_SYSTEM_SET_HOSTSLAVE_MODE):
+                                ResNotifyHostSlaveMode_message = notify.ResNotifyHostSlaveMode()
+                                ResNotifyHostSlaveMode_message.ParseFromString(WsPacket_message.data)
+
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_SYSTEM_SET_HOSTSLAVE_MODE")
+                                my_logger.debug(f"receive code data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+
+                                # OK = 0; // No Error
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CMD_SYSTEM_SET_HOSTSLAVE_MODE {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = "ok"
+                                    await asyncio.sleep(5)
+                                    print("Error CMD_SYSTEM_SET_HOSTSLAVE_MODE CODE {getErrorCodeValueName(ComResponse_message.code)}")
+                                else :
+                                    self.result = "ok"
+                                    my_logger.debug("SET HOST OK >> EXIT")
+                                    print("Success SET HOST OK OK")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    await asyncio.sleep(5)
+
                             # CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE = 10039; // // Get the working status of the whole machine
                             elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE):
                                 ComResponse_message = base__pb2.ComResponse()

@@ -17,6 +17,16 @@ from lib.dwarf_utils import perfom_takeAstroPhoto
 
     programm = 
         { command : {
+                id_command : {
+                    uuid : uuid;
+                    description: text;
+                    date : date;
+                    time : time;
+                    process : {wait, pending, ended};
+                    result : boolean;
+                    message : {...};
+                }
+
                 calibration : {
                     do_action : false;
                     wait_before : time_sec;

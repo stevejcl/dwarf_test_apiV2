@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0csystem.proto\"\x1f\n\nReqSetTime\x12\x11\n\ttimestamp\x18\x01 \x01(\x04\"\"\n\x0eReqSetTimezone\x12\x10\n\x08timezone\x18\x01 \x01(\t\"\x1d\n\rReqSetMtpMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"\x1d\n\rReqSetCpuMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\x62\x06proto3'
+  serialized_pb=b'\n\x0csystem.proto\"\x1f\n\nReqSetTime\x12\x11\n\ttimestamp\x18\x01 \x01(\x04\"\"\n\x0eReqSetTimezone\x12\x10\n\x08timezone\x18\x01 \x01(\t\"\x1d\n\rReqSetMtpMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"\x1d\n\rReqSetCpuMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\"#\n\x13ReqSetHostSlaveMode\x12\x0c\n\x04mode\x18\x01 \x01(\x05\x62\x06proto3'
 )
 
 
@@ -152,10 +152,43 @@ _REQSETCPUMODE = _descriptor.Descriptor(
   serialized_end=145,
 )
 
+
+_REQSETHOSTSLAVEMODE = _descriptor.Descriptor(
+  name='ReqSetHostSlaveMode',
+  full_name='ReqSetHostSlaveMode',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='mode', full_name='ReqSetHostSlaveMode.mode', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=147,
+  serialized_end=182,
+)
+
 DESCRIPTOR.message_types_by_name['ReqSetTime'] = _REQSETTIME
 DESCRIPTOR.message_types_by_name['ReqSetTimezone'] = _REQSETTIMEZONE
 DESCRIPTOR.message_types_by_name['ReqSetMtpMode'] = _REQSETMTPMODE
 DESCRIPTOR.message_types_by_name['ReqSetCpuMode'] = _REQSETCPUMODE
+DESCRIPTOR.message_types_by_name['ReqSetHostSlaveMode'] = _REQSETHOSTSLAVEMODE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 ReqSetTime = _reflection.GeneratedProtocolMessageType('ReqSetTime', (_message.Message,), {
@@ -185,6 +218,13 @@ ReqSetCpuMode = _reflection.GeneratedProtocolMessageType('ReqSetCpuMode', (_mess
   # @@protoc_insertion_point(class_scope:ReqSetCpuMode)
   })
 _sym_db.RegisterMessage(ReqSetCpuMode)
+
+ReqSetHostSlaveMode = _reflection.GeneratedProtocolMessageType('ReqSetHostSlaveMode', (_message.Message,), {
+  'DESCRIPTOR' : _REQSETHOSTSLAVEMODE,
+  '__module__' : 'system_pb2'
+  # @@protoc_insertion_point(class_scope:ReqSetHostSlaveMode)
+  })
+_sym_db.RegisterMessage(ReqSetHostSlaveMode)
 
 
 # @@protoc_insertion_point(module_scope)

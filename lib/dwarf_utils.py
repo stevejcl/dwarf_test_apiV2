@@ -11,12 +11,11 @@ import proto.astro_pb2 as astro
 import proto.system_pb2 as system
 import proto.camera_pb2 as camera
 import proto.protocol_pb2 as protocol
+import proto.ble_pb2 as ble
 
 import configparser
 import time
 import math
-
-
 
 def read_longitude():
     config = configparser.ConfigParser()
@@ -144,6 +143,118 @@ def read_camera_count():
         print("Data not found.")
         return False
 
+def read_bluetooth_ble_wifi_type():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_wifi_type = config.get('CONFIG', 'BLE_WIFI_TYPE')
+        return ble_wifi_type
+    except configparser.NoOptionError:
+        print("ble wifi type value not found")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+ 
+def read_bluetooth_autoAP():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_autoAP = config.get('CONFIG', 'BLE_AUTO_AP')
+        return ble_autoAP
+    except configparser.NoOptionError:
+        print("ble autostart AP value not found.")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+
+def read_bluetooth_country_list():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_country_list = config.get('CONFIG', 'BLE_COUNTRY_LIST')
+        return ble_country_list
+    except configparser.NoOptionError:
+        print("ble country list set value not found.")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+ 
+def read_bluetooth_country():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_country = config.get('CONFIG', 'BLE_COUNTRY')
+        return ble_country
+    except configparser.NoOptionError:
+        print("ble country value not found.")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+ 
+def read_bluetooth_ble_psd():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_psd = config.get('CONFIG', 'BLE_PSD')
+        return ble_psd
+    except configparser.NoOptionError:
+        print("ble pwd value not found.")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+ 
+def read_bluetooth_autoSTA():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_autoSTA = config.get('CONFIG', 'BLE_AUTO_STA')
+        return ble_autoSTA
+    except configparser.NoOptionError:
+        print("ble autostart STA value not found.")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+
+def read_bluetooth_ble_STA_ssid():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_STA_ssid = config.get('CONFIG', 'BLE_STA_SSID')
+        return ble_STA_ssid
+    except configparser.NoOptionError:
+        print("STA ssid value not found")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+ 
+def read_bluetooth_ble_STA_pwd():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    try:
+        ble_STA_pwd = config.get('CONFIG', 'BLE_STA_PWD')
+        return ble_STA_pwd
+    except configparser.NoOptionError:
+        print("STA pwd value not found")
+        return False
+    except configparser.NoSectionError:
+        print("Data not found.")
+        return False
+ 
 def parse_ra_to_float(ra_string):
     # Split the RA string into hours, minutes, and seconds
     hours, minutes, seconds = map(float, ra_string.split(':'))
@@ -189,6 +300,30 @@ def perform_getstatus():
         log.error("Dwarf API:", "Dwarf II not connected")
 
     return False
+
+def set_HostMaster():
+    # SET Host
+    module_id = 4  # MODULE_SYSTEM
+    type_id = 0; #REQUEST
+
+    ReqSetHostSlaveMode_message = system.ReqSetHostSlaveMode()
+    ReqSetHostSlaveMode_message.mode = 0
+    
+    command = 13004 #CMD_SYSTEM_SET_HOSTSLAVE_MODE
+    response = connect_socket(ReqSetHostSlaveMode_message, command, type_id, module_id)
+
+    if response is not False: 
+
+      if response == 0:
+          log.debug("Set Host SLAVE success")
+          return True
+      else:
+          log.error("Error:", response)
+    else:
+        log.error("Dwarf API:", "Dwarf II not connected")
+
+    return False
+
 
 def perform_goto(ra, dec, target):
 
@@ -489,11 +624,11 @@ def perform_get_camera_setting( type):
     return response
 
   elif (type == "IR"):
-    # gain
+    # IR
     module_id = 1  # MODULE_TELE_CAMERA
     type_id = 0; #REQUEST
 
-    ReqGetIrCut_message = camera.ReqSetIrCut ()
+    ReqGetIrCut_message = camera.ReqGetIrCut ()
 
     command = 10032; #CMD_CAMERA_TELE_GET_IRCUT
 
@@ -649,3 +784,4 @@ def permform_update_camera_setting( type, value):
     command = 10037; #CMD_CAMERA_TELE_SET_FEATURE_PARAM
 
     response = connect_socket(ReqSetFeatureParams_message, command, type_id, module_id)
+
