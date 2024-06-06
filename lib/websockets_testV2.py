@@ -186,23 +186,52 @@ def fct_show_test(show_test = True, show_test1 = False, show_test2 = False):
 
 def fct_decode_wireshark(user_frame, masked = False, user_maskedcode = ""):
     # Use regular expression to find the desired substring
-    index = user_frame.find("\\x08\\x01\\x10\\x02\\x18\\x01")
+    start = 0
+    start_pattern = "\\x08\\x01\\x10\\x02\\x18\\x01"
+    end_pattern = "b41e8a3a5e51"
 
-    if index == -1:
-        print("Not a valid frame.")
-        print("------------------")
-        return
+    extracted_strings = extracted_frames(user_frame, start_pattern, end_pattern)
 
-    if index != -1:
-        end_index = user_frame.rfind("\"")
-        if end_index != -1 and end_index > index:
-            desired_string = user_frame[index:end_index]
-            python_expression = "\""+ desired_string + "\""
-        else:
-            print("End of substring not found.")
-    else:
-        print("Substring not found.")
+    print("=====================")
+    for idx, frame in enumerate(extracted_strings):
+      print(f"Extracted frame {idx+1}: \"{frame}\"")
+      python_expression = "\""+ frame + "\""
+      decode_packet(python_expression, masked, user_maskedcode)
+      print("=====================")
 
+def extracted_frames(user_frame, start_pattern, end_pattern):
+    start_len = len(start_pattern)
+    end_len = len(end_pattern)
+    start_index = 0
+    extracted_frames = []
+
+    while start_index < len(user_frame):
+        start_index = user_frame.find(start_pattern, start_index)
+        if start_index == -1:
+            break
+
+        # Find the end pattern after the current start pattern
+        end_index = user_frame.find(end_pattern, start_index + start_len)
+        if end_index == -1:
+            break
+
+        # Include the end pattern in the extracted string
+        end_index += end_len
+
+        # Extract the desired substring
+        desired_frame = user_frame[start_index:end_index]
+        extracted_frames.append(desired_frame)
+
+        # Move the start index to continue searching
+        start_index = end_index
+
+    return extracted_frames
+
+def decode_packet(python_expression, masked = False, user_maskedcode = ""):
+
+  if (python_expression):
+
+    print("decoding:")
     data_frame = ast.literal_eval(f'b{python_expression}') #user_frame.encode('latin-1')
     print(data_frame)
 
