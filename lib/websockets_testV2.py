@@ -3,6 +3,7 @@ import re
 import proto.protocol_pb2 as protocol
 import proto.notify_pb2 as notify
 import proto.astro_pb2 as astro
+import proto.motor_control_pb2 as motor_control
 import proto.system_pb2 as system
 # in notify
 import proto.base_pb2 as base__pb2
@@ -268,6 +269,12 @@ def decode_packet(python_expression, masked = False, user_maskedcode = ""):
             ResNotifyStateAstroCalibration_message.ParseFromString(WsPacket_message.data)
             my_logger.debug("receive notification data >>", ResNotifyStateAstroCalibration_message.state)
             my_logger.debug("receive notification times >>", ResNotifyStateAstroCalibration_message.plate_solving_times)
+        elif (WsPacket_message.cmd == protocol.CMD_STEP_MOTOR_SERVICE_JOYSTICK):
+            ResMotorPosition_message = motor_control.ResMotorPosition()
+            ResMotorPosition_message.ParseFromString(WsPacket_message.data)
+            my_logger.debug("receive notification id >>", ResMotorPosition_message.id)
+            my_logger.debug("receive notification code >>", ResMotorPosition_message.code)
+            my_logger.debug("receive notification position >>", ResMotorPosition_message.position)
         elif (WsPacket_message.cmd == protocol.CMD_ASTRO_START_CALIBRATION):
             ComResponse_message = base__pb2.ComResponse()
             ComResponse_message.ParseFromString(WsPacket_message.data)

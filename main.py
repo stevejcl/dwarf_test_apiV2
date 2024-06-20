@@ -36,6 +36,7 @@ from lib.dwarf_utils import read_bluetooth_ble_STA_ssid
 from lib.dwarf_utils import read_bluetooth_ble_STA_pwd
 from lib.data_utils import get_exposure_name_by_index
 from lib.data_utils import get_gain_name_by_index
+from lib.dwarf_utils import motor_action
 from connect_bluetooth import connect_bluetooth
 
 def display_menu():
@@ -52,8 +53,9 @@ def display_menu():
     print("9. Send GoTo Manual Target")
     print("10. Input Longitude & Latitude")
     print("11. Set HOST MASTER")
-    print("C. Camera Data Function")
     print("B. Bluetooth Functions")
+    print("C. Camera Data Function")
+    print("M. Motor Function")
     print("T. Test Frames Decoding")
     print("0. Exit")
 
@@ -87,8 +89,19 @@ def display_menu_bluetooth():
     print("S. Save Bluetooth Param Config Information")
     print("0. Return")
 
+def display_menu_motor():
+    print("")
+    print("------------------")
+    print("C. Closed Barrel Position")
+    print("I. Init Horizontal Position")
+    print("P. Polar Align Position")
+    print("S. Turn 90° for Second Polar Align Position")
+    print("RR. Option RR. Reset Rotation Axis")
+    print("RS. Option RS. Reset Pitch Axis")
+    print("0. Return")
+
 def get_user_choice():
-    choice = input("Enter your choice (1-11) or (B,C,T) or 0 to exit: ")
+    choice = input("Enter your choice (1-11) or (B,C,M,T) or 0 to exit: ")
     return choice
 
 def get_user_choice_test():
@@ -101,6 +114,10 @@ def get_user_choice_camera():
 
 def get_user_choice_bluetooth():
     choice = input("Enter your choice C,R,S or 0 to return to main menu: ")
+    return choice
+
+def get_user_choice_motor():
+    choice = input("Enter your choice C,I,P,S or 0 to return to main menu: ")
     return choice
 
 def option_1():
@@ -175,6 +192,11 @@ def option_C():
 def option_B():
     print("You selected Option B: Bluetooth Functions")
     choice_bluetooth()
+    # Add your Option 3 functionality here
+
+def option_M():
+    print("You selected Option M: Motor Functions")
+    choice_motor()
     # Add your Option 3 functionality here
 
 def option_T():
@@ -358,26 +380,62 @@ def option_C6():
 def option_C7():
     print("You selected Option C7. Go Live Action")
     print("")
-    # Add your Option C8 functionality here
+    # Add your Option C7 functionality here
     perfom_GoLive()
 
 def option_BC():
     print("You selected Option C. connect Bluetooth and Start STA Mode")
     print("")
-    # Add your Option C11 functionality here
+    # Add your Option BC functionality here
     connect_bluetooth()
 
 def option_BR():
     print("You selected Option R. Read Bluetooth Param Config Information")
     print("")
-    # Add your Option C11 functionality here
+    # Add your Option BR functionality here
     read_bluetooth_data()
 
 def option_BS():
     print("You selected Option S. Save Bluetooth Param Config Information")
     print("")
-    # Add your Option C2 functionality here
+    # Add your Option BS functionality here
     input_bluetooth_data()
+
+def option_MC():
+    print("You selected Option C. Closed Barrel Position")
+    print("")
+    # Add your Option MC functionality here
+    motor_action(1)
+
+def option_MI():
+    print("You selected Option I. Init Horizontal Position")
+    print("")
+    # Add your Option MI functionality here
+    motor_action(2)
+
+def option_MP():
+    print("You selected Option P. Polar Align Position")
+    print("")
+    # Add your Option MP functionality here
+    motor_action(3)
+
+def option_MS():
+    print("You selected Option S. Turn 90° for Second Polar Align Position")
+    print("")
+    # Add your Option MS functionality here
+    motor_action(4)
+
+def option_RR():
+    print("You selected Option RR. Reset Rotation Axis")
+    print("")
+    # Add your Option RR functionality here
+    motor_action(5)
+
+def option_RS():
+    print("You selected Option RS.  Reset Pitch Axis")
+    print("")
+    # Add your Option MS functionality here
+    motor_action(6)
 
 def option_20():
     print("You selected Option T1: Decoding Test Frames 1")
@@ -977,6 +1035,36 @@ def choice_bluetooth():
         else:
             print("Invalid choice. Please enter a correct value.")
 
+def choice_motor():
+    while True:
+        display_menu_motor()
+        user_choice = get_user_choice_motor()
+
+        if user_choice == 'C':
+            option_MC()
+
+        elif user_choice == 'I':
+            option_MI()
+
+        elif user_choice == 'P':
+            option_MP()
+
+        elif user_choice == 'S':
+            option_MS()
+
+        elif user_choice == 'RR':
+            option_RR()
+
+        elif user_choice == 'RS':
+            option_RS()
+
+        elif user_choice == '0':
+            print("Return to the main menu")
+            break
+
+        else:
+            print("Invalid choice. Please enter a correct value.")
+
 def main():
     while True:
         display_menu()
@@ -1020,6 +1108,9 @@ def main():
 
         elif user_choice == 'B':
             option_B()
+
+        elif user_choice == 'M':
+            option_M()
 
         elif user_choice == 'T':
             option_T()

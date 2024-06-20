@@ -11,6 +11,7 @@ import proto.astro_pb2 as astro
 import proto.system_pb2 as system
 import proto.camera_pb2 as camera
 import proto.protocol_pb2 as protocol
+import proto.motor_control_pb2 as motor
 import proto.ble_pb2 as ble
 
 import configparser
@@ -785,3 +786,78 @@ def permform_update_camera_setting( type, value):
 
     response = connect_socket(ReqSetFeatureParams_message, command, type_id, module_id)
 
+def motor_action( action ):
+    module_id = 6  # MODULE_MOTOR
+    type_id = 0; #REQUEST
+
+    if (action == 5):
+      ReqMotorReset_message = motor.ReqMotorReset ()
+      ReqMotorReset_message.id= 1;
+      ReqMotorReset_message.direction = 0;
+      command = 14003; #CMD_STEP_MOTOR_RESET
+      response = connect_socket(ReqMotorReset_message, command, type_id, module_id)
+
+    if (action == 6):
+      ReqMotorReset_message = motor.ReqMotorReset ()
+      ReqMotorReset_message.id= 2;
+      ReqMotorReset_message.direction = 1;
+      command = 14003; #CMD_STEP_MOTOR_RESET
+      response = connect_socket(ReqMotorReset_message, command, type_id, module_id)
+
+    if (action == 1):
+      ReqMotorRunTo_message = motor.ReqMotorRunTo ()
+      ReqMotorRunTo_message.id= 2;
+      ReqMotorRunTo_message.end_position = 318;
+      ReqMotorRunTo_message.speed = 10; # 5 gears: 0.1, 1, 5, 10, 30 degrees/s
+      ReqMotorRunTo_message.speed_ramping = 100;
+      ReqMotorRunTo_message.resolution_level = 2;
+      command = 14001; #CMD_STEP_MOTOR_RUNTO
+      response = connect_socket(ReqMotorRunTo_message, command, type_id, module_id)
+
+    if (action == 2):
+      ReqMotorRunTo_message = motor.ReqMotorRunTo ()
+      ReqMotorRunTo_message.id= 1;
+      ReqMotorRunTo_message.end_position = 160;
+      ReqMotorRunTo_message.speed = 10; # 5 gears: 0.1, 1, 5, 10, 30 degrees/s
+      ReqMotorRunTo_message.speed_ramping = 100;
+      ReqMotorRunTo_message.resolution_level = 3;
+      command = 14001; #CMD_STEP_MOTOR_RUNTO
+      response = connect_socket(ReqMotorRunTo_message, command, type_id, module_id)
+
+    if (action == 3):
+      ReqMotorRunTo_message = motor.ReqMotorRunTo ()
+      ReqMotorRunTo_message.id= 2;
+      ReqMotorRunTo_message.end_position = 150;
+      ReqMotorRunTo_message.speed = 10; # 5 gears: 0.1, 1, 5, 10, 30 degrees/s
+      ReqMotorRunTo_message.speed_ramping = 100;
+      ReqMotorRunTo_message.resolution_level = 3;
+      command = 14001; #CMD_STEP_MOTOR_RUNTO
+      response = connect_socket(ReqMotorRunTo_message, command, type_id, module_id)
+
+    if (action == 4):
+      ReqMotorRunTo_message = motor.ReqMotorRunTo ()
+      ReqMotorRunTo_message.id= 1;
+      ReqMotorRunTo_message.end_position = 70;
+      ReqMotorRunTo_message.speed = 10; # 5 gears: 0.1, 1, 5, 10, 30 degrees/s
+      ReqMotorRunTo_message.speed_ramping = 100;
+      ReqMotorRunTo_message.resolution_level = 3;
+      command = 14001; #CMD_STEP_MOTOR_RUNTO
+      response = connect_socket(ReqMotorRunTo_message, command, type_id, module_id)
+
+    if (action == 0):
+      ReqMotorRun_message = motor.ReqMotorRun ()
+      ReqMotorRun_message.id= 2;
+      ReqMotorRun_message.speed = 10; # 5 gears: 0.1, 1, 5, 10, 30 degrees/s
+      ReqMotorRun_message.direction = 0;
+      ReqMotorRun_message.speed_ramping = 100;
+      ReqMotorRun_message.resolution_level = 3;
+      command = 14000; #CMD_STEP_MOTOR_RUN
+      response = connect_socket(ReqMotorRun_message, command, type_id, module_id)
+
+    if (action == 10):
+      ReqMotorServiceJoystickFixedAngle_message = motor.ReqMotorServiceJoystickFixedAngle ()
+      ReqMotorServiceJoystickFixedAngle_message.vector_length = 0.8; # 5 gears: 0.1, 1, 5, 10, 30 degrees/s
+      ReqMotorServiceJoystickFixedAngle_message.speed = 15;
+
+      command = 14006; #CMD_STEP_MOTOR_SERVICE_JOYSTICK
+      response = connect_socket(ReqMotorServiceJoystickFixedAngle_message, command, type_id, module_id)

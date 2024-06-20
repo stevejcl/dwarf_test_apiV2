@@ -1,5 +1,27 @@
 syntax = "proto3";
 
+enum DwarfBleErrorCode {
+    BLE_OK = 0; // Normal return
+    BLE_PASSWORD_ERROR = -1; // Bluetooth password error
+    BLE_MESSAGE_MALLOC_ERROR = -2; // Bluetooth Communication Protocol Memory Error
+    BLE_MESSAGE_PARSE_ERROR = -3; // Bluetooth Communication Protocol Message Parsing Error
+    BLE_MESSAGE_CRC_ERROR = -4; // CRC check failed
+    BLE_WIFI_CONFIGING = -5; // Bluetooth configuration wifi
+    BLE_WIFI_CONFIGED = -6; // WiFi configuration is done
+    BLE_GET_WIFI_LIST_ERROR = -7; // Failed to get WiFi list
+    BLE_WIFI_STA_PASSWORD_EMPTY = -8; // STA password is empty
+    BLE_WIFI_STA_PASSWORD_ERROR = -9; // STA password error
+    BLE_WIFI_SET_SSID_PSD_ERROR = -10; // Failed to set name and password
+    BLE_WIFI_RESET_WAITING = -11; // Bluetooth wifi waiting for reset
+    BLE_WIFI_RESETED = -12; // Bluetooth wifi has been reset
+    BLE_GET_SYSTEM_INFO_ERROR = -13; // Failed to retrieve system information
+    BLE_RECEIVE_FRAME_HEAD_ERROR = -14; // Protocol header error
+    BLE_RECEIVE_FRAME_TAIL_ERROR = -15; // Protocol end-of-frame error
+    BLE_CHECK_FILE_NOT_EXIST = -16; // MD5 detection file does not exist
+    BLE_CHECK_FILE_MD5_ERROR = -17; // MD5 verification failed
+    BLE_WIFI_RESET_FAILED = -18; // Reset failed
+}
+
 //ask
 message ReqGetconfig {
      int32 cmd = 1; //CMD instruction value is 1

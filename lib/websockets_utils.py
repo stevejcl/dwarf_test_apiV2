@@ -9,6 +9,7 @@ import proto.notify_pb2 as notify
 import proto.astro_pb2 as astro
 import proto.system_pb2 as system
 import proto.camera_pb2 as camera
+import proto.motor_control_pb2 as motor
 # in notify
 import proto.base_pb2 as base__pb2
 
@@ -246,6 +247,71 @@ class WebSocketClient:
                                     # Signal the ping and receive functions to stop
                                     self.stop_task.set()
                                     await asyncio.sleep(5)
+
+                            # CMD_STEP_MOTOR_RUN = 14000; // Motor motion
+                            if (WsPacket_message.cmd==protocol.CMD_STEP_MOTOR_RUN):
+                                ResNotifyMotor_message = motor.ResMotor()
+                                ResNotifyMotor_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_STEP_MOTOR_RUN")
+                                my_logger.debug(f"receive id data >> {ResNotifyMotor_message.id}")
+                                my_logger.debug(f"receive code data >> {ResNotifyMotor_message.code}")
+
+                                self.result = "ok"
+                                my_logger.debug("CMD_STEP_MOTOR_RUN OK >> EXIT")
+                                print("Success CMD_STEP_MOTOR_RUN")
+                                # Signal the ping and receive functions to stop
+                                self.stop_task.set()
+                                await asyncio.sleep(5)
+
+                            # CMD_STEP_MOTOR_RUNTO = 14001; // Motor motion to
+                            if (WsPacket_message.cmd==protocol.CMD_STEP_MOTOR_RUNTO):
+                                ResNotifyMotorPosition_message = motor.ResMotorPosition()
+                                ResNotifyMotorPosition_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_STEP_MOTOR_RUNTO")
+                                my_logger.debug(f"receive id data >> {ResNotifyMotorPosition_message.id}")
+                                my_logger.debug(f"receive code data >> {ResNotifyMotorPosition_message.code}")
+                                my_logger.debug(f"receive position data >> {ResNotifyMotorPosition_message.position}")
+
+                                self.result = "ok"
+                                my_logger.debug("CMD_STEP_MOTOR_RUNTO OK >> EXIT")
+                                print("Success CMD_STEP_MOTOR_RUNTO")
+                                # Signal the ping and receive functions to stop
+                                self.stop_task.set()
+                                await asyncio.sleep(5)
+
+                            # CMD_STEP_MOTOR_RESET = 14003; // Motor CMD_STEP_MOTOR_RESET
+                            if (WsPacket_message.cmd==protocol.CMD_STEP_MOTOR_RESET):
+                                ResNotifyMotor_message = motor.ResMotor()
+                                ResNotifyMotor_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_STEP_MOTOR_RESET")
+                                my_logger.debug(f"receive id data >> {ResNotifyMotor_message.id}")
+                                my_logger.debug(f"receive code data >> {ResNotifyMotor_message.code}")
+
+                                self.result = "ok"
+                                my_logger.debug("CMD_STEP_MOTOR_RESET OK >> EXIT")
+                                print("Success CMD_STEP_MOTOR_RESET")
+                                # Signal the ping and receive functions to stop
+                                self.stop_task.set()
+                                await asyncio.sleep(5)
+
+                            # CMD_STEP_MOTOR_SERVICE_JOYSTICK = 14006; // Motor motion to
+                            if (WsPacket_message.cmd==protocol.CMD_STEP_MOTOR_SERVICE_JOYSTICK):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_STEP_MOTOR_SERVICE_JOYSTICK")
+                                my_logger.debug(f"receive code data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+
+                                self.result = "ok"
+                                my_logger.debug("CMD_STEP_MOTOR_SERVICE_JOYSTICK OK >> EXIT")
+                                print("Success CMD_STEP_MOTOR_SERVICE_JOYSTICK")
+                                # Signal the ping and receive functions to stop
+                                self.stop_task.set()
+                                await asyncio.sleep(5)
 
                             # CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE = 10039; // // Get the working status of the whole machine
                             elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE):
