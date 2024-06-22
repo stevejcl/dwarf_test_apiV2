@@ -837,7 +837,7 @@ def motor_action( action ):
     if (action == 4):
       ReqMotorRunTo_message = motor.ReqMotorRunTo ()
       ReqMotorRunTo_message.id= 1;
-      ReqMotorRunTo_message.end_position = 70;
+      ReqMotorRunTo_message.end_position = 69;
       ReqMotorRunTo_message.speed = 10; # 5 gears: 0.1, 1, 5, 10, 30 degrees/s
       ReqMotorRunTo_message.speed_ramping = 100;
       ReqMotorRunTo_message.resolution_level = 3;
