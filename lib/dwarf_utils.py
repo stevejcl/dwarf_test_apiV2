@@ -16,6 +16,7 @@ import proto.ble_pb2 as ble
 
 import configparser
 import time
+from datetime import datetime
 import math
 
 def read_longitude():
@@ -302,7 +303,7 @@ def perform_getstatus():
 
     return False
 
-def set_HostMaster():
+def unset_HostMaster():
     # SET Host
     module_id = 4  # MODULE_SYSTEM
     type_id = 0; #REQUEST
@@ -316,7 +317,8 @@ def set_HostMaster():
     if response is not False: 
 
       if response == 0:
-          log.debug("Set Host SLAVE success")
+          log.debug("Unset Host SLAVE success")
+          log.debug("Need to disconnect to take effect")
           return True
       else:
           log.error("Error:", response)
@@ -379,6 +381,29 @@ def perform_goto_stellar(target_id, target_name):
 
       if response == "ok":
           log.debug("Goto success")
+          return True
+      else:
+          log.error("Error:", response)
+    else:
+        log.error("Dwarf API:", "Dwarf II not connected")
+
+    return False
+
+def perfom_takePhoto():
+
+    # START TAKE TELE PHOTO
+    module_id = 1  # MODULE_CAMERA_TELE
+    type_id = 0; #REQUEST
+
+    ReqPhoto_message = camera.ReqPhoto()
+
+    command = 10002 #CMD_CAMERA_TELE_PHOTOGRAPH
+    response = connect_socket(ReqPhoto_message, command, type_id, module_id)
+
+    if response is not False: 
+
+      if response == 0:
+          log.debug("START TAKE TELE PHOTO success")
           return True
       else:
           log.error("Error:", response)
@@ -463,6 +488,17 @@ def perform_time():
     type_id = 0; #REQUEST
 
     ReqSetTime_message = system.ReqSetTime()
+
+    # Local Time
+    now = datetime.now()
+
+    # Format the time in the required OCAT time format: YYYYMMDDHHMMSS
+    ocat_time = now.strftime('%Y%m%d%H%M%S')
+
+    # Assign the formatted time to ReqSetTime_message.timestamp
+    ReqSetTime_message.timestamp = int(ocat_time)
+    
+    # UTC
     ReqSetTime_message.timestamp = math.floor(time.time())
 
     command = 13000 #CMD_SYSTEM_SET_TIME

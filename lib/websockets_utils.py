@@ -333,7 +333,7 @@ class WebSocketClient:
                                 else:
                                     print("Continue OK CMD_CAMERA_TELE_GET_SYSTEM_WORKING_STATE")
 
-                            # CMD_CAMERA_TELE_OPEN_CAMERA = 10000; // // Poen the TELE Camera
+                            # CMD_CAMERA_TELE_OPEN_CAMERA = 10000; // // Open the TELE Camera
                             elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_OPEN_CAMERA):
                                 ComResponse_message = base__pb2.ComResponse()
                                 ComResponse_message.ParseFromString(WsPacket_message.data)
@@ -352,6 +352,55 @@ class WebSocketClient:
                                     print("Error CMD_CAMERA_TELE_OPEN_CAMERA CODE {getErrorCodeValueName(ComResponse_message.code)}")
                                 else:
                                     print("Continue OK CMD_CAMERA_TELE_OPEN_CAMERA")
+
+                            # CMD_CAMERA_TELE_PHOTOGRAPH = 10002; // //  Take photos
+                            elif (WsPacket_message.cmd==protocol.CMD_CAMERA_TELE_PHOTOGRAPH):
+                                ComResponse_message = base__pb2.ComResponse()
+                                ComResponse_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_CAMERA_TELE_PHOTOGRAPH")
+                                my_logger.debug(f"receive code data >> {ComResponse_message.code}")
+                                my_logger.debug(f">> {getErrorCodeValueName(ComResponse_message.code)}")
+
+                                # OK = 0; // No Error
+                                if (ComResponse_message.code != protocol.OK):
+                                    my_logger.debug(f"Error CMD_CAMERA_TELE_PHOTOGRAPH {ComResponse_message.code} >> EXIT")
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ComResponse_message.code
+                                    await asyncio.sleep(5)
+                                    print("Error CMD_CAMERA_TELE_PHOTOGRAPH CODE {getErrorCodeValueName(ComResponse_message.code)}")
+                                else:
+                                    print("Continue OK CMD_CAMERA_TELE_PHOTOGRAPH")
+
+                            # CMD_CAMERA_TELE_PHOTOGRAPH = 10002; // //  End Take photos
+                            elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_TELE_FUNCTION_STATE):
+    
+                                ResNotifyCamFunctionState_message = notify.ResNotifyCamFunctionState()
+                                ResNotifyCamFunctionState_message.ParseFromString(WsPacket_message.data)
+
+                                print("Decoding CMD_NOTIFY_TELE_FUNCTION_STATE")
+                                my_logger.debug(f"receive notification data >> {ResNotifyCamFunctionState_message.state}")
+                                my_logger.debug(f">> {getAstroStateName(ResNotifyCamFunctionState_message.state)}")
+
+                                # ASTRO_STATE_IDLE = 0; // Idle => End
+                                if (ResNotifyCamFunctionState_message.state == notify.ASTRO_STATE_IDLE):
+                                    self.result = "ok"
+                                    my_logger.debug("TAKE PHOTO OK >> EXIT")
+                                    print("Success TAKE PHOTO OK")
+
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = "ok"
+                                    await asyncio.sleep(5)
+                                elif (ResNotifyCamFunctionState_message.state == notify.ASTRO_STATE_RUNNING):
+                                    print("Starting CMD_CAMERA_TELE_PHOTOGRAPH")
+                                else:
+                                    # Signal the ping and receive functions to stop
+                                    self.stop_task.set()
+                                    self.result = ResNotifyCamFunctionState_message.state
+                                    await asyncio.sleep(5)
+                                    print("Error CMD_CAMERA_TELE_PHOTOGRAPH PROCESS STOP}")
 
                             # CMD_NOTIFY_STATE_ASTRO_CALIBRATION = 15210; // Astronomical calibration status
                             elif (WsPacket_message.cmd==protocol.CMD_NOTIFY_STATE_ASTRO_CALIBRATION):

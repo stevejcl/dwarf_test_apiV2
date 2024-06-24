@@ -25,7 +25,7 @@ from lib.dwarf_utils import perfom_GoLive
 from lib.dwarf_utils import permform_update_camera_setting
 from lib.dwarf_utils import perform_get_all_camera_setting
 from lib.dwarf_utils import perform_get_all_feature_camera_setting
-from lib.dwarf_utils import set_HostMaster
+from lib.dwarf_utils import unset_HostMaster
 from lib.dwarf_utils import read_bluetooth_ble_wifi_type
 from lib.dwarf_utils import read_bluetooth_autoAP
 from lib.dwarf_utils import read_bluetooth_country_list
@@ -37,11 +37,20 @@ from lib.dwarf_utils import read_bluetooth_ble_STA_pwd
 from lib.data_utils import get_exposure_name_by_index
 from lib.data_utils import get_gain_name_by_index
 from lib.dwarf_utils import motor_action
+from lib.dwarf_utils import perfom_takePhoto
 from connect_bluetooth import connect_bluetooth
+from get_live_data_dwarf import get_live_data
 
 def display_menu():
     print("")
-    print("------------------")
+    print("----------------------------------")
+    print("  After the bluetooth connection, ")
+    print("    a Time and Time Zone Frames   ")
+    print("     are automatically sent.      ")
+    print("----------------------------------")
+    print("    Don't forget to send them     ")
+    print("if not using bluetooth connection ")
+    print("----------------------------------")
     print("1. Send Time Frame")
     print("2. Send TimeZone Frame")
     print("3. Send Calibration Frame")
@@ -52,9 +61,10 @@ def display_menu():
     print("8. Send GoTo Jupiter")
     print("9. Send GoTo Manual Target")
     print("10. Input Longitude & Latitude")
-    print("11. Set HOST MASTER")
+    print("11. Unset HOST MASTER")
     print("B. Bluetooth Functions")
     print("C. Camera Data Function")
+    print("L. Get Live Data Function")
     print("M. Motor Function")
     print("T. Test Frames Decoding")
     print("0. Exit")
@@ -79,6 +89,7 @@ def display_menu_camera():
     print("C5. Start Imaging Session")
     print("C6. Stop Imaging Session")
     print("C7. Go Live Action")
+    print("C8. Take one Photo Only")
     print("0. Return")
 
 def display_menu_bluetooth():
@@ -101,7 +112,7 @@ def display_menu_motor():
     print("0. Return")
 
 def get_user_choice():
-    choice = input("Enter your choice (1-11) or (B,C,M,T) or 0 to exit: ")
+    choice = input("Enter your choice (1-11) or (B,C,L,M,T) or 0 to exit: ")
     return choice
 
 def get_user_choice_test():
@@ -181,7 +192,7 @@ def option_10():
 
 def option_11():
     print("You selected Option 11: Set HOST MASTER")
-    set_HostMaster()
+    unset_HostMaster()
     # Add your Option 11 functionality here
 
 def option_C():
@@ -192,6 +203,11 @@ def option_C():
 def option_B():
     print("You selected Option B: Bluetooth Functions")
     choice_bluetooth()
+    # Add your Option 3 functionality here
+
+def option_L():
+    print("You selected Option L: Get Live Data Functions")
+    get_live_data()
     # Add your Option 3 functionality here
 
 def option_M():
@@ -383,11 +399,23 @@ def option_C7():
     # Add your Option C7 functionality here
     perfom_GoLive()
 
+def option_C8():
+    print("You selected Option C8. Take one Photo Only")
+    print("")
+    # Add your Option C8 functionality here
+    perfom_takePhoto()
+
 def option_BC():
     print("You selected Option C. connect Bluetooth and Start STA Mode")
     print("")
     # Add your Option BC functionality here
     connect_bluetooth()
+
+    #init Frame : TIME and TIMZONE
+    result = perform_time()
+       
+    if result:
+        perform_timezone()
 
 def option_BR():
     print("You selected Option R. Read Bluetooth Param Config Information")
@@ -1007,6 +1035,9 @@ def choice_camera():
         elif user_choice == 'C7':
             option_C7()
 
+        elif user_choice == 'C8':
+            option_C8()
+
         elif user_choice == '0':
             print("Return to the main menu")
             break
@@ -1108,6 +1139,9 @@ def main():
 
         elif user_choice == 'B':
             option_B()
+
+        elif user_choice == 'L':
+            option_L()
 
         elif user_choice == 'M':
             option_M()
