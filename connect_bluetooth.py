@@ -4,13 +4,43 @@ import webbrowser
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 import threading
 import time
+import json
+import importlib
+import config  # Ensure config is imported
 
 # Global PORT
 PORT = 8000
+CONFIG_FILE = 'config.py'
+
+class MyHandler(SimpleHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        data = json.loads(post_data.decode('utf-8'))
+        parameter = data['parameter']
+
+        # Read the config file and update the IP address
+        with open(CONFIG_FILE, 'r') as file:
+            lines = file.readlines()
+        
+        with open(CONFIG_FILE, 'w') as file:
+            for line in lines:
+                if line.startswith('DWARF_IP'):
+                    file.write(f'DWARF_IP = "{parameter}"\n')
+                else:
+                    file.write(line)
+
+        # Reload the config module to ensure the new value is used
+        importlib.reload(config)
+
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'status': 'success'}).encode('utf-8'))
 
 class MyServer(threading.Thread):
     def run(self):
-        self.server = ThreadingHTTPServer(('localhost', PORT), SimpleHTTPRequestHandler)
+        self.server = ThreadingHTTPServer(('localhost', PORT), MyHandler)
         self.server.serve_forever()
     def stop(self):
         self.server.shutdown()

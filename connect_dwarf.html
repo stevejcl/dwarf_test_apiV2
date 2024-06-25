@@ -19,6 +19,28 @@
 .buttonError {background-color: #808C6D;} /* Red */
 
 </style>
+   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Parameter</title>
+    <script>
+        function sendParameter(value) {
+            fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ parameter: value }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+
 </head>
 <body>
 
@@ -181,6 +203,7 @@ async function handleClick(event) {
                 actionDisconnect("Error set WifiSTA:" + result_data.code + " (" + Dwarfii_Api.DwarfBleErrorCode[result_data.code] + ")" );
               } else {
                 console.log("Connected with IP: ", result_data.ip);
+                sendParameter(result_data.ip);
                 startButton.classList.remove("buttonSearching");
                 startButton.classList.add("buttonOK");
                 startButton.textContent = "Connected to Dwarf II";
