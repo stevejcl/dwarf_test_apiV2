@@ -6,7 +6,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='dwarf_test_apiV2',
-    version='V1.1',
+    version='V1.2',
     packages=find_packages(),
     install_requires=requirements,
 )
