@@ -389,7 +389,7 @@ def perform_goto_stellar(target_id, target_name):
 
     return False
 
-def perfom_takePhoto():
+def perform_takePhoto():
 
     # START TAKE TELE PHOTO
     module_id = 1  # MODULE_CAMERA_TELE
@@ -402,8 +402,8 @@ def perfom_takePhoto():
 
     if response is not False: 
 
-      if response == 0:
-          log.debug("START TAKE TELE PHOTO success")
+      if response == "ok":
+          log.debug("TAKE TELE PHOTO success")
           return True
       else:
           log.error("Error:", response)
@@ -412,7 +412,7 @@ def perfom_takePhoto():
 
     return False
 
-def perfom_takeAstroPhoto():
+def perform_takeAstroPhoto():
 
     # START CAPTURE RAW LIVE STACKING
     module_id = 3  # MODULE_ASTRO
@@ -435,7 +435,7 @@ def perfom_takeAstroPhoto():
 
     return False
 
-def perfom_stopAstroPhoto():
+def perform_stopAstroPhoto():
 
     # STOP CAPTURE RAW LIVE STACKING
     module_id = 3  # MODULE_ASTRO
@@ -458,7 +458,7 @@ def perfom_stopAstroPhoto():
 
     return False
 
-def perfom_GoLive():
+def perform_GoLive():
 
     # CMD_ASTRO_GO_LIVE
     module_id = 3  # MODULE_ASTRO

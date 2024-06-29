@@ -5,13 +5,13 @@ from datetime import datetime
 from lib.dwarf_utils import perform_time
 from lib.dwarf_utils import perform_timezone
 
-from lib.dwarf_utils import perfom_GoLive
+from lib.dwarf_utils import perform_GoLive
 from lib.dwarf_utils import perform_calibration
 from lib.dwarf_utils import perform_goto
 from lib.dwarf_utils import perform_goto_stellar
 from lib.dwarf_utils import parse_ra_to_float
 from lib.dwarf_utils import parse_dec_to_float
-from lib.dwarf_utils import perfom_takeAstroPhoto
+from lib.dwarf_utils import perform_takeAstroPhoto
 
 # JSON ENTRY FILE
 
@@ -96,7 +96,7 @@ def start_session(programm)
     else 
         stop_action()
 
-    continu_action = perfom_GoLive()
+    continu_action = perform_GoLive()
     verify_action(continu_action, "step_1")
 
     continu_action = permform_update_camera_setting("exposure", "1")
@@ -147,6 +147,6 @@ def start_session(programm)
 
         verify_action(continu_action, "step_1")
 
-        perfom_takeAstroPhoto()   
+        perform_takeAstroPhoto()   
 
         verify_action(continu_action, "step_1")

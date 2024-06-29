@@ -6,7 +6,7 @@ import threading
 import time
 import json
 import importlib
-import config  # Ensure config is imported
+import config # Ensure config is imported
 
 # Global PORT
 PORT = 8000
@@ -56,14 +56,27 @@ def connect_bluetooth():
     server = MyServer()
     server.start()
 
-    time.sleep(3)  # Adjust delay as needed
+    time.sleep(2)  # Adjust delay as needed
     
     try:
         # Open the web page in the default web browser
         open_browser(URL)
 
         # Wait for user input to stop the server
-        input("Press Enter to stop the server...")
+        previous_ip = None
+        time.sleep(3)
+        result = False
+        
+        while not result:
+            current_ip = config.DWARF_IP
+
+            if current_ip != previous_ip:
+                previous_ip = current_ip
+                if current_ip == "":
+                    print("Info: IP address setting cleared.")
+                else:
+                    result = True
+            time.sleep(1)
 
     except KeyboardInterrupt:
         # Handle Ctrl+C to stop the server
@@ -73,5 +86,5 @@ def connect_bluetooth():
         server.stop()
 
     # Optional: Add additional delay or cleanup steps if needed
-    time.sleep(3)
+    time.sleep(1)
 

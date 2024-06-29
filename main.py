@@ -19,9 +19,9 @@ from lib.dwarf_utils import read_camera_format
 from lib.dwarf_utils import read_camera_count
 from lib.dwarf_utils import parse_ra_to_float
 from lib.dwarf_utils import parse_dec_to_float
-from lib.dwarf_utils import perfom_takeAstroPhoto
-from lib.dwarf_utils import perfom_stopAstroPhoto
-from lib.dwarf_utils import perfom_GoLive
+from lib.dwarf_utils import perform_takeAstroPhoto
+from lib.dwarf_utils import perform_stopAstroPhoto
+from lib.dwarf_utils import perform_GoLive
 from lib.dwarf_utils import permform_update_camera_setting
 from lib.dwarf_utils import perform_get_all_camera_setting
 from lib.dwarf_utils import perform_get_all_feature_camera_setting
@@ -37,7 +37,7 @@ from lib.dwarf_utils import read_bluetooth_ble_STA_pwd
 from lib.data_utils import get_exposure_name_by_index
 from lib.data_utils import get_gain_name_by_index
 from lib.dwarf_utils import motor_action
-from lib.dwarf_utils import perfom_takePhoto
+from lib.dwarf_utils import perfrom_takePhoto
 from connect_bluetooth import connect_bluetooth
 from get_live_data_dwarf import get_live_data
 
@@ -385,25 +385,25 @@ def option_C5():
     print("You selected Option C5. Start Imaging Session")
     print("")
     # Add your Option C5 functionality here
-    perfom_takeAstroPhoto()
+    perform_takeAstroPhoto()
 
 def option_C6():
     print("You selected Option C6. Stop Imaging Session")
     print("")
     # Add your Option C6 functionality here
-    perfom_stopAstroPhoto()
+    perform_stopAstroPhoto()
 
 def option_C7():
     print("You selected Option C7. Go Live Action")
     print("")
     # Add your Option C7 functionality here
-    perfom_GoLive()
+    perform_GoLive()
 
 def option_C8():
     print("You selected Option C8. Take one Photo Only")
     print("")
     # Add your Option C8 functionality here
-    perfom_takePhoto()
+    perform_takePhoto()
 
 def option_BC():
     print("You selected Option C. connect Bluetooth and Start STA Mode")

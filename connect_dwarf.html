@@ -86,6 +86,7 @@ import { Dwarfii_Api, messageGetconfig, messageWifiSTA, analyzePacketBle} from "
 
 window.addEventListener('DOMContentLoaded', async (event) => {
     const startButton = document.getElementById('startButton');
+    sendParameter("");
 
     if (startButton) {
         startButton.addEventListener('click', handleClick);

@@ -6,7 +6,7 @@ from time import sleep
 import configparser
 import time
 import config
-from lib.dwarf_utils import perfom_takePhoto
+from lib.dwarf_utils import perform_takePhoto
 
 # FTP connection details
 global ftp_host
@@ -113,6 +113,8 @@ def getLastTelePhoto(history):
                 print ("Found the requested photo")
                 print(f"Find File : {remote_file} from directory: {remote_directory}")
                 remote_path = remote_directory + "/" + remote_file
+                # Convert to absolute path
+                local_photo_directory = os.path.abspath(local_photo_directory)
                 local_path = os.path.join(local_photo_directory, remote_file)
 
                 if (os.path.isfile(local_path)):
@@ -346,16 +348,19 @@ def option_7():
     print("You selected Option 7. Take one Photo Only")
     print("")
     # Add your Option 7 functionality here
-    perfom_takePhoto()
+    perform_takePhoto()
     display_menu()
 
-def getGetLastPhoto(history = 0):
+def getGetLastPhoto(history = 0, get_config = False):
     global ftp_host
     global local_photo_directory
 
     if (not ftp_host):
         print("The Dwarf IP can't be empty!")
         return 
+
+    if (get_config):
+        read_config()
 
     if (not local_photo_directory):
         print("The Current Photo Directory can't be empty!")
