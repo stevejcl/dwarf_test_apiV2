@@ -2,44 +2,45 @@ import configparser
 import re
 from datetime import datetime
 
-from lib.dwarf_utils import perform_goto
-from lib.dwarf_utils import perform_goto_stellar
-from lib.dwarf_utils import perform_time
-from lib.dwarf_utils import perform_timezone
-from lib.dwarf_utils import perform_calibration
-from lib.dwarf_utils import perform_decoding_test
-from lib.dwarf_utils import perform_decode_wireshark
-from lib.dwarf_utils import read_longitude
-from lib.dwarf_utils import read_latitude
-from lib.dwarf_utils import read_camera_exposure
-from lib.dwarf_utils import read_camera_gain
-from lib.dwarf_utils import read_camera_IR
-from lib.dwarf_utils import read_camera_binning
-from lib.dwarf_utils import read_camera_format
-from lib.dwarf_utils import read_camera_count
-from lib.dwarf_utils import parse_ra_to_float
-from lib.dwarf_utils import parse_dec_to_float
-from lib.dwarf_utils import perform_takeAstroPhoto
-from lib.dwarf_utils import perform_stopAstroPhoto
-from lib.dwarf_utils import perform_GoLive
-from lib.dwarf_utils import permform_update_camera_setting
-from lib.dwarf_utils import perform_get_all_camera_setting
-from lib.dwarf_utils import perform_get_all_feature_camera_setting
-from lib.dwarf_utils import unset_HostMaster
-from lib.dwarf_utils import read_bluetooth_ble_wifi_type
-from lib.dwarf_utils import read_bluetooth_autoAP
-from lib.dwarf_utils import read_bluetooth_country_list
-from lib.dwarf_utils import read_bluetooth_country
-from lib.dwarf_utils import read_bluetooth_ble_psd
-from lib.dwarf_utils import read_bluetooth_autoSTA
-from lib.dwarf_utils import read_bluetooth_ble_STA_ssid
-from lib.dwarf_utils import read_bluetooth_ble_STA_pwd
-from lib.data_utils import get_exposure_name_by_index
-from lib.data_utils import get_gain_name_by_index
-from lib.dwarf_utils import motor_action
-from lib.dwarf_utils import perfrom_takePhoto
-from connect_bluetooth import connect_bluetooth
-from get_live_data_dwarf import get_live_data
+from dwarf_python_api.lib.dwarf_utils import perform_goto
+from dwarf_python_api.lib.dwarf_utils import perform_goto_stellar
+from dwarf_python_api.lib.dwarf_utils import perform_time
+from dwarf_python_api.lib.dwarf_utils import perform_timezone
+from dwarf_python_api.lib.dwarf_utils import perform_calibration
+from dwarf_python_api.lib.dwarf_utils import perform_decoding_test
+from dwarf_python_api.lib.dwarf_utils import perform_decode_wireshark
+from dwarf_python_api.lib.dwarf_utils import read_longitude
+from dwarf_python_api.lib.dwarf_utils import read_latitude
+from dwarf_python_api.lib.dwarf_utils import read_camera_exposure
+from dwarf_python_api.lib.dwarf_utils import read_camera_gain
+from dwarf_python_api.lib.dwarf_utils import read_camera_IR
+from dwarf_python_api.lib.dwarf_utils import read_camera_binning
+from dwarf_python_api.lib.dwarf_utils import read_camera_format
+from dwarf_python_api.lib.dwarf_utils import read_camera_count
+from dwarf_python_api.lib.dwarf_utils import parse_ra_to_float
+from dwarf_python_api.lib.dwarf_utils import parse_dec_to_float
+from dwarf_python_api.lib.dwarf_utils import perform_takeAstroPhoto
+from dwarf_python_api.lib.dwarf_utils import perform_stopAstroPhoto
+from dwarf_python_api.lib.dwarf_utils import perform_GoLive
+from dwarf_python_api.lib.dwarf_utils import permform_update_camera_setting
+from dwarf_python_api.lib.dwarf_utils import perform_get_all_camera_setting
+from dwarf_python_api.lib.dwarf_utils import perform_get_all_feature_camera_setting
+from dwarf_python_api.lib.dwarf_utils import unset_HostMaster
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_wifi_type
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_autoAP
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_country_list
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_country
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_psd
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_autoSTA
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_STA_ssid
+from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_STA_pwd
+from dwarf_python_api.lib.data_utils import get_exposure_name_by_index
+from dwarf_python_api.lib.data_utils import get_gain_name_by_index
+from dwarf_python_api.lib.dwarf_utils import motor_action
+from dwarf_python_api.lib.dwarf_utils import perform_takePhoto
+from dwarf_python_api.get_live_data_dwarf import get_live_data
+
+from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
 
 def display_menu():
     print("")
@@ -409,13 +410,13 @@ def option_BC():
     print("You selected Option C. connect Bluetooth and Start STA Mode")
     print("")
     # Add your Option BC functionality here
-    connect_bluetooth()
+    if (connect_bluetooth()):
 
-    #init Frame : TIME and TIMZONE
-    result = perform_time()
+        #init Frame : TIME and TIMZONE
+        result = perform_time()
        
-    if result:
-        perform_timezone()
+        if result:
+           perform_timezone()
 
 def option_BR():
     print("You selected Option R. Read Bluetooth Param Config Information")
@@ -703,7 +704,7 @@ def input_bluetooth_data():
         print("No value entered:")
 
     prompt = "Enter the desired STA auto start  (0 = boot not start (defaut), 1 = boot start) "
-    ble_autoSTA_init = read_bluetooth_ble_wifi_type()
+    ble_autoSTA_init = read_bluetooth_autoSTA()
     ble_autoSTA = input(f"{prompt}[{ble_autoSTA_init}]:") if ble_autoSTA_init else input(prompt+"[0]")
     if not ble_autoSTA and not ble_autoSTA_init:
         ble_autoSTA = "0"
@@ -923,7 +924,7 @@ def update_bluetoothconfig(ble_wifi_type, ble_autoAP, ble_country_list, ble_coun
 def update_htmlfile(ble_psd, ble_STA_ssid, ble_STA_pwd):
 
   # Specify the path to your HTML file
-  html_file_path = 'connect_dwarf.html'
+  html_file_path = 'dwarf_ble_connect/connect_dwarf.html'
 
   # Read the HTML file
   with open(html_file_path, 'r') as html_file:

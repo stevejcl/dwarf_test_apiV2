@@ -3,7 +3,3 @@ websockets==11.0.3
 protobuf==3.20.*
 
 bleak
-
-connect_bluetooth
-get_live_data_dwarf
-lib.dwarf_utils
