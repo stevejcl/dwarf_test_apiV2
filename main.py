@@ -38,6 +38,8 @@ from dwarf_python_api.lib.data_utils import get_exposure_name_by_index
 from dwarf_python_api.lib.data_utils import get_gain_name_by_index
 from dwarf_python_api.lib.dwarf_utils import motor_action
 from dwarf_python_api.lib.dwarf_utils import perform_takePhoto
+from dwarf_python_api.lib.dwarf_utils import perform_start_autofocus
+from dwarf_python_api.lib.dwarf_utils import perform_stop_autofocus
 from dwarf_python_api.get_live_data_dwarf import get_live_data
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
@@ -91,6 +93,9 @@ def display_menu_camera():
     print("C6. Stop Imaging Session")
     print("C7. Go Live Action")
     print("C8. Take one Photo Only")
+    print("C9. Astro Autofocus")
+    print("C10. Astro Infinite Autofocus")
+    print("C11. Stop Astro Autofocus")
     print("0. Return")
 
 def display_menu_bluetooth():
@@ -98,7 +103,7 @@ def display_menu_bluetooth():
     print("------------------")
     print("C. connect Bluetooth and Start STA Mode")
     print("R. Read Bluetooth Param Config Information")
-    print("S. Save Bluetooth Param Config Information")
+    print("S. Save Bluetooth Param Config Information and for Connection")
     print("0. Return")
 
 def display_menu_motor():
@@ -121,7 +126,7 @@ def get_user_choice_test():
     return choice
 
 def get_user_choice_camera():
-    choice = input("Enter your choice (C1 to C7) or 0 to return to main menu: ")
+    choice = input("Enter your choice (C1 to C11) or 0 to return to main menu: ")
     return choice
 
 def get_user_choice_bluetooth():
@@ -405,6 +410,24 @@ def option_C8():
     print("")
     # Add your Option C8 functionality here
     perform_takePhoto()
+
+def option_C9():
+    print("You selected Option C9. Astro Autofocus")
+    print("")
+    # Add your Option C8 functionality here
+    perform_start_autofocus(False)
+
+def option_C10():
+    print("You selected Option C10. Astro Infinite Autofocus")
+    print("")
+    # Add your Option C8 functionality here
+    perform_start_autofocus(True)
+
+def option_C11():
+    print("You selected Option C11. Stop Astro Autofocus")
+    print("")
+    # Add your Option C8 functionality here
+    perform_stop_autofocus()
 
 def option_BC():
     print("You selected Option C. connect Bluetooth and Start STA Mode")
@@ -1038,6 +1061,15 @@ def choice_camera():
 
         elif user_choice == 'C8':
             option_C8()
+
+        elif user_choice == 'C9':
+            option_C9()
+
+        elif user_choice == 'C10':
+            option_C10()
+
+        elif user_choice == 'C11':
+            option_C11()
 
         elif user_choice == '0':
             print("Return to the main menu")
