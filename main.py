@@ -1,12 +1,13 @@
 import configparser
-import re
 from datetime import datetime
 
+from dwarf_python_api.lib.dwarf_utils import perform_disconnect
 from dwarf_python_api.lib.dwarf_utils import perform_goto
 from dwarf_python_api.lib.dwarf_utils import perform_goto_stellar
 from dwarf_python_api.lib.dwarf_utils import perform_time
 from dwarf_python_api.lib.dwarf_utils import perform_timezone
 from dwarf_python_api.lib.dwarf_utils import perform_calibration
+from dwarf_python_api.lib.dwarf_utils import perform_stop_calibration
 from dwarf_python_api.lib.dwarf_utils import perform_decoding_test
 from dwarf_python_api.lib.dwarf_utils import perform_decode_wireshark
 from dwarf_python_api.lib.dwarf_utils import read_longitude
@@ -17,14 +18,20 @@ from dwarf_python_api.lib.dwarf_utils import read_camera_IR
 from dwarf_python_api.lib.dwarf_utils import read_camera_binning
 from dwarf_python_api.lib.dwarf_utils import read_camera_format
 from dwarf_python_api.lib.dwarf_utils import read_camera_count
+from dwarf_python_api.lib.dwarf_utils import read_camera_wide_exposure
+from dwarf_python_api.lib.dwarf_utils import read_camera_wide_gain
 from dwarf_python_api.lib.dwarf_utils import parse_ra_to_float
 from dwarf_python_api.lib.dwarf_utils import parse_dec_to_float
 from dwarf_python_api.lib.dwarf_utils import perform_takeAstroPhoto
 from dwarf_python_api.lib.dwarf_utils import perform_stopAstroPhoto
 from dwarf_python_api.lib.dwarf_utils import perform_GoLive
-from dwarf_python_api.lib.dwarf_utils import permform_update_camera_setting
+from dwarf_python_api.lib.dwarf_utils import perform_takeWidePhoto
+from dwarf_python_api.lib.dwarf_utils import perform_takeAstroWidePhoto
+from dwarf_python_api.lib.dwarf_utils import perform_stopAstroWidePhoto
+from dwarf_python_api.lib.dwarf_utils import perform_update_camera_setting
 from dwarf_python_api.lib.dwarf_utils import perform_get_all_camera_setting
 from dwarf_python_api.lib.dwarf_utils import perform_get_all_feature_camera_setting
+from dwarf_python_api.lib.dwarf_utils import perform_get_all_camera_wide_setting
 from dwarf_python_api.lib.dwarf_utils import unset_HostMaster
 from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_wifi_type
 from dwarf_python_api.lib.dwarf_utils import read_bluetooth_autoAP
@@ -36,13 +43,19 @@ from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_STA_ssid
 from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_STA_pwd
 from dwarf_python_api.lib.data_utils import get_exposure_name_by_index
 from dwarf_python_api.lib.data_utils import get_gain_name_by_index
+from dwarf_python_api.lib.data_wide_utils import get_wide_exposure_name_by_index
+from dwarf_python_api.lib.data_wide_utils import get_wide_gain_name_by_index
 from dwarf_python_api.lib.dwarf_utils import motor_action
 from dwarf_python_api.lib.dwarf_utils import perform_takePhoto
 from dwarf_python_api.lib.dwarf_utils import perform_start_autofocus
 from dwarf_python_api.lib.dwarf_utils import perform_stop_autofocus
 from dwarf_python_api.get_live_data_dwarf import get_live_data
+from dwarf_python_api.get_config_data import get_config_data
+from dwarf_python_api.lib.dwarf_utils import perform_stop_autofocus
+
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
+from dwarf_ble_connect.connect_bluetooth import update_htmlfile
 
 def display_menu():
     print("")
@@ -63,10 +76,12 @@ def display_menu():
     print("7. Send GoTo M31")
     print("8. Send GoTo Jupiter")
     print("9. Send GoTo Manual Target")
-    print("10. Input Longitude & Latitude")
-    print("11. Unset HOST MASTER")
+    print("10. Stop Calibration")
+    print("11. Input Longitude & Latitude")
+    print("12. Unset HOST MASTER")
     print("B. Bluetooth Functions")
     print("C. Camera Data Function")
+    print("D. Force Disconnection")
     print("L. Get Live Data Function")
     print("M. Motor Function")
     print("T. Test Frames Decoding")
@@ -83,12 +98,14 @@ def display_menu_test():
     print("0. Return")
 
 def display_menu_camera():
+    data_config = get_config_data()
+    dwarf_id = data_config['dwarf_id'] 
     print("")
     print("------------------")
     print("C1. Read Saved Config Camera Data")
     print("C2. Input Camera Data to Config")
-    print("C3. Read Current DwarfII Camera Data")
-    print("C4. Import Saved Config Camera Data into DwarfII")
+    print("C3. Read Current Dwarf Camera Data")
+    print("C4. Import Saved Config Camera Data into Dwarf")
     print("C5. Start Imaging Session")
     print("C6. Stop Imaging Session")
     print("C7. Go Live Action")
@@ -96,6 +113,10 @@ def display_menu_camera():
     print("C9. Astro Autofocus")
     print("C10. Astro Infinite Autofocus")
     print("C11. Stop Astro Autofocus")
+    print("C12. Take one Wide Photo Only")
+    if dwarf_id == "3":
+        print("C13. Start Wide Imaging Session")
+        print("C14. Stop Wide Imaging Session")
     print("0. Return")
 
 def display_menu_bluetooth():
@@ -112,29 +133,50 @@ def display_menu_motor():
     print("C. Closed Barrel Position")
     print("I. Init Horizontal Position")
     print("P. Polar Align Position")
+    print("P3. Polar Align Position For D3")
     print("S. Turn 90° for Second Polar Align Position")
     print("RR. Option RR. Reset Rotation Axis")
     print("RS. Option RS. Reset Pitch Axis")
     print("0. Return")
 
 def get_user_choice():
-    choice = input("Enter your choice (1-11) or (B,C,L,M,T) or 0 to exit: ")
+    try:
+        choice = input("Enter your choice (1-12) or (B,C,D,L,M,T) or 0 to exit: ")
+    except KeyboardInterrupt:
+        print("Operation interrupted by the user (CTRL+C).")
+        choice = '0'
     return choice
 
 def get_user_choice_test():
-    choice = input("Enter your choice (T1 to T4) or D or 0 to return to main menu: ")
+    try:
+        choice = input("Enter your choice (T1 to T4) or D or 0 to return to main menu: ")
+    except KeyboardInterrupt:
+        print("Operation interrupted by the user (CTRL+C).")
+        choice = '0'
     return choice
 
 def get_user_choice_camera():
-    choice = input("Enter your choice (C1 to C11) or 0 to return to main menu: ")
+    try:
+        choice = input("Enter your choice (C1 to C14) or 0 to return to main menu: ")
+    except KeyboardInterrupt:
+        print("Operation interrupted by the user (CTRL+C).")
+        choice = '0'
     return choice
 
 def get_user_choice_bluetooth():
-    choice = input("Enter your choice C,R,S or 0 to return to main menu: ")
+    try:
+        choice = input("Enter your choice C,R,S or 0 to return to main menu: ")
+    except KeyboardInterrupt:
+        print("Operation interrupted by the user (CTRL+C).")
+        choice = '0'
     return choice
 
 def get_user_choice_motor():
-    choice = input("Enter your choice C,I,P,S or 0 to return to main menu: ")
+    try:
+        choice = input("Enter your choice C,I,P,P3,S or 0 to return to main menu: ")
+    except KeyboardInterrupt:
+        print("Operation interrupted by the user (CTRL+C).")
+        choice = '0'
     return choice
 
 def option_1():
@@ -192,34 +234,44 @@ def option_9():
     input_manual_target()
 
 def option_10():
-    print("You selected Option 10: Input Data : Longitude, Latitude and TimeZone")
-    input_data()
+    print("You selected Option 11: Stop Calibration")
+    perform_stop_calibration()
     # Add your Option 10 functionality here
 
 def option_11():
-    print("You selected Option 11: Set HOST MASTER")
-    unset_HostMaster()
+    print("You selected Option 11: Input Data : Longitude, Latitude and TimeZone")
+    input_data()
     # Add your Option 11 functionality here
+
+def option_12():
+    print("You selected Option 12: Set HOST MASTER")
+    unset_HostMaster()
+    # Add your Option 12 functionality here
+
+def option_B():
+    print("You selected Option B: Bluetooth Functions")
+    choice_bluetooth()
+    # Add your Option B functionality here
 
 def option_C():
     print("You selected Option C: Camera Data function")
     choice_camera()
     # Add your Option C functionality here
 
-def option_B():
-    print("You selected Option B: Bluetooth Functions")
-    choice_bluetooth()
-    # Add your Option 3 functionality here
+def option_D():
+    print("You selected Option D: Force Disconnection")
+    perform_disconnect()
+    # Add your Option D functionality here
 
 def option_L():
     print("You selected Option L: Get Live Data Functions")
     get_live_data()
-    # Add your Option 3 functionality here
+    # Add your Option L functionality here
 
 def option_M():
     print("You selected Option M: Motor Functions")
     choice_motor()
-    # Add your Option 3 functionality here
+    # Add your Option M functionality here
 
 def option_T():
     print("You selected Option T: Do Tests..")
@@ -229,7 +281,7 @@ def option_T():
 def option_C1():
     print("You selected Option C1. Read Saved Config Camera Data")
     print("")
-    # Add your Option C11 functionality here
+    # Add your Option C1 functionality here
     read_camera_data()
 
 def option_C2():
@@ -239,7 +291,7 @@ def option_C2():
     input_camera_data()
 
 def option_C3():
-    print("You selected Option C3. Read Current DwarfII Camera Data")
+    print("You selected Option C3. Read Current Dwarf Camera Data")
     print("")
     # Add your Option C3 functionality here
     camera_exposure = False
@@ -248,13 +300,21 @@ def option_C3():
     camera_IR = False
     camera_format = False
     camera_count = False
+    camera_wide_exposure = False
+    camera_wide_gain = False
 
     result = perform_get_all_camera_setting()
     result_feature = perform_get_all_feature_camera_setting()
+    result_wide = perform_get_all_camera_wide_setting()
     print("------------------")
 
+    # get dwarf type id
+    data_config = get_config_data()
+    dwarf_id = data_config['dwarf_id'] 
+    print(f"Connected to Dwarf {dwarf_id}")
+
     # ALL PARAMS
-    if (result):
+    if (result and not isinstance(result,int)):
         # get Camera
         target_id = 0
 
@@ -265,7 +325,7 @@ def option_C3():
             # Extract specific fields for the matching entry
            index_value = matching_entry["index"]
 
-           camera_exposure = str(get_exposure_name_by_index(index_value))
+           camera_exposure = str(get_exposure_name_by_index(index_value,dwarf_id))
            print("the exposition is: ", camera_exposure)
         else:
            print("the exposition has not been found")
@@ -280,7 +340,8 @@ def option_C3():
             # Extract specific fields for the matching entry
            index_value = matching_entry["index"]
 
-           camera_gain = str(get_gain_name_by_index(index_value))
+
+           camera_gain = str(get_gain_name_by_index(index_value,dwarf_id))
            print("the gain is: ", camera_gain)
         else:
            print("the gain has not been found")
@@ -307,7 +368,7 @@ def option_C3():
        print("the IRfilter has not been found")
 
     # ALL FEATURE PARAMS
-    if result_feature : 
+    if (result_feature and not isinstance(result_feature,int)):
         # get binning
         target_id = 0
 
@@ -358,34 +419,80 @@ def option_C3():
        print("the image format value has not been found")
        print("the number of images for the session has not been found")
 
+    # ALL Wide PARAMS
+    if (result_wide and not isinstance(result_wide,int)):
+        # get Camera
+        target_id = 0
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result_wide["all_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+           index_value = matching_entry["index"]
+
+           camera_wide_exposure = str(get_wide_exposure_name_by_index(index_value,dwarf_id))
+           print("the wide exposition is: ", camera_wide_exposure)
+        else:
+           print("the wide exposition has not been found")
+
+        # get Gain
+        target_id = 1
+
+        # Find the entry with the matching id
+        matching_entry = next((entry for entry in result_wide["all_params"] if entry["id"] == target_id), None)
+
+        if matching_entry:
+            # Extract specific fields for the matching entry
+           index_value = matching_entry["index"]
+
+
+           camera_wide_gain = str(get_wide_gain_name_by_index(index_value,dwarf_id))
+           print("the wide gain is: ", camera_wide_gain)
+        else:
+           print("the wide gain has not been found")
 
 def option_C4():
-    print("You selected Option C4. Import Saved Config Camera Data into DwarfII")
+    print("You selected Option C4. Import Saved Config Camera Data into Dwarf")
     print("")
     # Add your Option C4 functionality here
+    # get dwarf type id
+    data_config = get_config_data()
+    dwarf_id = str(data_config['dwarf_id']) 
+    print(f"Connected to Dwarf {dwarf_id}")
+
     if (camera_exposure := read_camera_exposure()):
         print("the exposition is: ", camera_exposure)
-        permform_update_camera_setting("exposure", camera_exposure)
+        perform_update_camera_setting("exposure", camera_exposure, dwarf_id)
 
     if (camera_gain := read_camera_gain()):
         print("the gain is:", camera_gain)
-        permform_update_camera_setting("gain", camera_gain)
+        perform_update_camera_setting("gain", camera_gain, dwarf_id)
 
     if (camera_IR := read_camera_IR()):
         print("the IR value is:", camera_IR)
-        permform_update_camera_setting("IR", camera_IR)
+        perform_update_camera_setting("IR", camera_IR)
 
     if (camera_binning := read_camera_binning()):
         print("the Binning value is:", camera_binning)
-        permform_update_camera_setting("binning", camera_binning)
+        perform_update_camera_setting("binning", camera_binning)
 
     if (camera_format := read_camera_format()):
         print("the image format value is:", camera_format)
-        permform_update_camera_setting("fileFormat", camera_format)
+        perform_update_camera_setting("fileFormat", camera_format)
 
     if (camera_count := read_camera_count()):
         print("the number of images for the session is:", camera_count)
-        permform_update_camera_setting("count", camera_count)
+        perform_update_camera_setting("count", camera_count)
+
+    if (camera_wide_exposure := read_camera_wide_exposure()):
+        print("the wide exposition is: ", camera_wide_exposure)
+        perform_update_camera_setting("wide_exposure", camera_wide_exposure, dwarf_id)
+
+    if (camera_wide_gain := read_camera_wide_gain()):
+        print("the wide gain is:", camera_wide_gain)
+        perform_update_camera_setting("wide_gain", camera_wide_gain, dwarf_id)
+
 
 def option_C5():
     print("You selected Option C5. Start Imaging Session")
@@ -429,12 +536,30 @@ def option_C11():
     # Add your Option C8 functionality here
     perform_stop_autofocus()
 
+def option_C12():
+    print("You selected Option C12, Take one Wide Photo Only")
+    print("")
+    # Add your Option C12 functionality here
+    perform_takeWidePhoto()
+
+def option_C13():
+    print("You selected Option C13, Start Wide Imaging Session")
+    print("")
+    # Add your Option C13 functionality here
+    perform_takeAstroWidePhoto()
+
+def option_C14():
+    print("You selected Option C14, Stop Wide Imaging Session")
+    print("")
+    # Add your Option C8 functionality here
+    perform_stopAstroWidePhoto()
+
 def option_BC():
     print("You selected Option C. connect Bluetooth and Start STA Mode")
     print("")
     # Add your Option BC functionality here
     if (connect_bluetooth()):
-
+        
         #init Frame : TIME and TIMZONE
         result = perform_time()
        
@@ -470,6 +595,12 @@ def option_MP():
     print("")
     # Add your Option MP functionality here
     motor_action(3)
+
+def option_MP3():
+    print("You selected Option P. Polar Align Position for D3")
+    print("")
+    # Add your Option MP functionality here
+    motor_action(7)
 
 def option_MS():
     print("You selected Option S. Turn 90° for Second Polar Align Position")
@@ -529,19 +660,71 @@ def input_data():
     print("")
     update_config(user_longitude, user_latitude, user_timezone)
 
+def validate_input(input_str, min, max):
+    try:
+        if '/' in input_str:
+            # Handle fraction input
+            numerator, denominator = input_str.split("/")
+
+            # Convert to integers
+            numerator = int(numerator)
+            denominator = int(denominator)
+
+            # Check for zero division
+            if denominator == 0:
+                print("Invalid input. Denominator cannot be zero.")
+                return False
+
+            # Perform the division to get the decimal value
+            result = numerator / denominator
+
+        else:
+            # Handle decimal or integer input
+            result = float(input_str)  # Automatically handles both decimal and integer inputs
+
+        # Check if result is greater than 0 and less than 100
+        if min < result < max:
+            return True
+        else:
+            print(f"Invalid input. The value is not between {min} and {max}.")
+            return False
+    
+    except ValueError:
+        print("Invalid input. Please provide a valid integer or fraction.")
+        return False
+
 def input_camera_data():
-    prompt = "Enter the desired exposition in seconds (0 = auto - 15), use fraction for less than 1s (ex: 1/10):"
+    # get dwarf type id
+    data_config = get_config_data()
+    dwarf_id = data_config['dwarf_id'] 
+    print(f"connected to Dwarf {dwarf_id}")
+    if dwarf_id == "3":
+        prompt = "Enter the desired exposition in seconds (0 = auto - 60), use fraction for less than 1s (ex: 1/10):"
+    else:
+        prompt = "Enter the desired exposition in seconds (0 = auto - 15), use fraction for less than 1s (ex: 1/10):"
     camera_exposure_init = read_camera_exposure()
     camera_exposure = input(f"{prompt}[{camera_exposure_init}]:") if camera_exposure_init else input(prompt+"[1]")
     if not camera_exposure and not camera_exposure_init:
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
-    elif camera_exposure and (int(camera_exposure)<0 or int(camera_exposure) > 15):
+    elif dwarf_id == "2" and camera_exposure and not validate_input(camera_exposure, 0, 15):
+        print("Input Data Error:", camera_exposure)
+        camera_exposure = "1"
+        print("Set to Default:", camera_exposure)
+    elif dwarf_id == "3" and camera_exposure and not validate_input(camera_exposure, 0, 60):
         print("Input Data Error:", camera_exposure)
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
     elif (camera_exposure):
         print("You entered:", camera_exposure)
+    elif dwarf_id == "2" and camera_exposure_init and not validate_input(camera_exposure_init, 0, 15):
+        print("Input Data Error:", camera_exposure_init)
+        camera_exposure = "1"
+        print("Set to Default:", camera_exposure)
+    elif dwarf_id == "3" and camera_exposure_init and not validate_input(camera_exposure_init, 0, 60):
+        print("Input Data Error:", camera_exposure_init)
+        camera_exposure = "1"
+        print("Set to Default:", camera_exposure)
     elif (camera_exposure_init):
         camera_exposure = camera_exposure_init
         print("Saved value used:", camera_exposure)
@@ -617,7 +800,69 @@ def input_camera_data():
         print("Set to Default:", camera_count)
     else:
         print("You entered:", camera_count)
-    update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning, camera_format, camera_count)
+
+    if dwarf_id == "3":
+        prompt = "Enter the desired wide exposition in seconds (0 = auto - 60), use fraction for less than 1s (ex: 1/10):"
+    else:
+        prompt = "Enter the desired wide exposition in seconds (0 = auto - 1), use fraction for less than 1s (ex: 1/10):"
+    camera_wide_exposure_init = read_camera_wide_exposure()
+    camera_wide_exposure = input(f"{prompt}[{camera_wide_exposure_init}]:") if camera_wide_exposure_init else input(prompt+"[1]")
+    if not camera_wide_exposure and not camera_wide_exposure_init:
+        camera_wide_exposure = "1"
+        print("Set to Default:", camera_wide_exposure)
+    elif dwarf_id == "2" and camera_wide_exposure and not validate_input(camera_wide_exposure, 0, 15):
+        print("Input Data Error:", camera_wide_exposure)
+        camera_wide_exposure = "1"
+        print("Set to Default:", camera_wide_exposure)
+    elif dwarf_id == "3" and camera_wide_exposure and not validate_input(camera_wide_exposure, 0, 60):
+        print("Input Data Error:", camera_wide_exposure)
+        camera_wide_exposure = "1"
+        print("Set to Default:", camera_wide_exposure)
+    elif (camera_wide_exposure):
+        print("You entered:", camera_wide_exposure)
+    elif dwarf_id == "2" and camera_wide_exposure_init and not validate_input(camera_wide_exposure_init, 0, 15):
+        print("Input Data Error:", camera_wide_exposure)
+        camera_wide_exposure = "1"
+        print("Set to Default:", camera_wide_exposure)
+    elif dwarf_id == "3" and camera_wide_exposure_init and not validate_input(camera_wide_exposure_init, 0, 60):
+        print("Input Data Error:", camera_wide_exposure_init)
+        camera_wide_exposure = "1"
+        print("Set to Default:", camera_wide_exposure)
+    elif (camera_wide_exposure_init):
+        camera_wide_exposure = camera_wide_exposure_init
+        print("Saved value used:", camera_wide_exposure)
+    else:
+        print("No value entered:")
+
+    if dwarf_id == "3":
+        prompt = "Enter the desired wide gain between (0-240):"
+    else:
+        prompt = "Enter the desired wide gain between (0-160):"
+    camera_wide_gain_init = read_camera_wide_gain()
+    camera_wide_gain = input(f"{prompt}[{camera_wide_gain_init}]:") if camera_wide_gain_init else input(prompt+"[80]")
+    if not camera_wide_gain and not camera_wide_gain_init:
+        if dwarf_id == "3":
+            camera_wide_gain = "0"
+        else:
+            camera_wide_gain = "60"
+        print("Set to Default:", camera_wide_gain)
+    elif dwarf_id == "3" and camera_wide_gain and (int(camera_wide_gain)<0 or int(camera_wide_gain) > 240):
+        print("Input Data Error:", camera_wide_gain)
+        camera_wide_gain = "0"
+        print("Set to Default:", camera_wide_gain)
+    elif dwarf_id == "2" and camera_wide_gain and (int(camera_wide_gain)<0 or int(camera_wide_gain) > 160):
+        print("Input Data Error:", camera_wide_gain)
+        camera_wide_gain = "60"
+        print("Set to Default:", camera_wide_gain)
+    elif (camera_wide_gain):
+        print("You entered:", camera_wide_gain)
+    elif (camera_wide_gain_init):
+        camera_wide_gain = camera_wide_gain_init
+        print("Saved value used:", camera_wide_gain)
+    else:
+        print("No value entered:")
+
+    update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning, camera_format, camera_count, camera_wide_exposure, camera_wide_gain)
 
 def read_camera_data():
     print("The values in the Config File are : ")
@@ -643,6 +888,10 @@ def read_camera_data():
             print("the image format value is: TIFF")
     if (camera_count := read_camera_count()):
         print("the number of images for the session is:", camera_count)
+    if (camera_wide_exposure := read_camera_wide_exposure()):
+        print("the wide exposition is: ", camera_wide_exposure)
+    if (camera_wide_gain := read_camera_wide_gain()):
+        print("the wide gain is:", camera_wide_gain)
 
 def input_bluetooth_data():
     prompt = "Enter the desired AP wifi type  (0 = 5G (defaut), 1 = 2.4G) "
@@ -896,7 +1145,7 @@ def update_config(longitude, latitude, timezone):
     with open('config.ini', 'w') as config_file:
         config.write(config_file)
 
-def update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning, camera_format, camera_count):
+def update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning, camera_format, camera_count, camera_wide_exposure, camera_wide_gain):
 
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -914,6 +1163,10 @@ def update_cameraconfig(camera_exposure, camera_gain, camera_IR, camera_binning,
         config['CONFIG']['FORMAT'] = camera_format
     if (camera_count):
         config['CONFIG']['COUNT'] = camera_count
+    if (camera_wide_exposure):
+        config['CONFIG']['WIDE_EXPOSURE'] = camera_wide_exposure
+    if (camera_wide_gain):
+        config['CONFIG']['WIDE_GAIN'] = camera_wide_gain
 
     with open('config.ini', 'w') as config_file:
         config.write(config_file)
@@ -944,43 +1197,7 @@ def update_bluetoothconfig(ble_wifi_type, ble_autoAP, ble_country_list, ble_coun
     with open('config.ini', 'w') as config_file:
         config.write(config_file)
 
-def update_htmlfile(ble_psd, ble_STA_ssid, ble_STA_pwd):
-
-  # Specify the path to your HTML file
-  html_file_path = 'dwarf_ble_connect/connect_dwarf.html'
-
-  # Read the HTML file
-  with open(html_file_path, 'r') as html_file:
-    lines = html_file.readlines()
-
-  # Define the pattern to match JavaScript variable assignments
-  pattern1 = re.compile(r'let BluetoothPWD = ".*?";')
-  pattern2 = re.compile(r'let BleSTASSIDDwarf = ".*?";')
-  pattern3 = re.compile(r'let BleSTAPWDDwarf = ".*?";')
-
-  # Loop through each line and replace the target line if found
-  modified_lines = []
-  for line in lines:
-    if pattern1.match(line):
-      # Replace the line with the new variable assignment
-      modified_lines.append(f'let BluetoothPWD = "{ble_psd}";\n')
-    elif pattern2.match(line):
-      # Replace the line with the new variable assignment
-      modified_lines.append(f'let BleSTASSIDDwarf = "{ble_STA_ssid}";\n')
-    elif pattern3.match(line):
-      # Replace the line with the new variable assignment
-      modified_lines.append(f'let BleSTAPWDDwarf = "{ble_STA_pwd}";\n')
-    else:
-      modified_lines.append(line)
-
-  # Write the modified content back to the HTML file
-  with open(html_file_path, 'w') as html_file:
-    html_file.writelines(modified_lines)
-
-  print("The Html file to connect to Bluetooth has been updated  accordingly")
-
 def perform_goto_target(target):
-    # Inverse LONGITUDE for DwarfII !!!!!!!
     ra = None
     dec = None
 
@@ -1071,6 +1288,15 @@ def choice_camera():
         elif user_choice == 'C11':
             option_C11()
 
+        elif user_choice == 'C12':
+            option_C12()
+
+        elif user_choice == 'C13':
+            option_C13()
+
+        elif user_choice == 'C14':
+            option_C14()
+
         elif user_choice == '0':
             print("Return to the main menu")
             break
@@ -1113,6 +1339,9 @@ def choice_motor():
         elif user_choice == 'P':
             option_MP()
 
+        elif user_choice == 'P3':
+            option_MP3()
+
         elif user_choice == 'S':
             option_MS()
 
@@ -1132,7 +1361,11 @@ def choice_motor():
 def main():
     while True:
         display_menu()
-        user_choice = get_user_choice()
+        try:
+            user_choice = get_user_choice()
+        except KeyboardInterrupt:
+            my_logger.warning("Operation interrupted by the user (CTRL+C).")
+            user_choice = '0'
 
         if user_choice == '1':
             option_1()
@@ -1167,11 +1400,17 @@ def main():
         elif user_choice == '11':
             option_11()
 
-        elif user_choice == 'C':
-            option_C()
+        elif user_choice == '12':
+            option_12()
 
         elif user_choice == 'B':
             option_B()
+
+        elif user_choice == 'C':
+            option_C()
+
+        elif user_choice == 'D':
+            option_D()
 
         elif user_choice == 'L':
             option_L()
@@ -1183,6 +1422,7 @@ def main():
             option_T()
 
         elif user_choice == '0':
+            perform_disconnect()
             print("Exiting the program. Goodbye!")
             break
 
