@@ -52,10 +52,9 @@ from dwarf_python_api.lib.dwarf_utils import perform_stop_autofocus
 from dwarf_python_api.get_live_data_dwarf import get_live_data
 from dwarf_python_api.get_config_data import get_config_data
 from dwarf_python_api.lib.dwarf_utils import perform_stop_autofocus
-
+from dwarf_python_api.lib.dwarf_utils import save_bluetooth_config_from_ini_file
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
-from dwarf_ble_connect.connect_bluetooth import update_htmlfile
 
 def display_menu():
     print("")
@@ -1016,7 +1015,7 @@ def input_bluetooth_data():
         print("No value entered:")
 
     update_bluetoothconfig(ble_wifi_type, ble_autoAP, ble_country_list, ble_country, ble_psd, ble_autoSTA, ble_STA_ssid, ble_STA_pwd)
-    update_htmlfile(ble_psd, ble_STA_ssid, ble_STA_pwd)
+    save_bluetooth_config_from_ini_file()
 
 def read_bluetooth_data():
     print("The values in the Config File are : ")
