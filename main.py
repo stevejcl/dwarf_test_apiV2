@@ -24,10 +24,12 @@ from dwarf_python_api.lib.dwarf_utils import parse_ra_to_float
 from dwarf_python_api.lib.dwarf_utils import parse_dec_to_float
 from dwarf_python_api.lib.dwarf_utils import perform_takeAstroPhoto
 from dwarf_python_api.lib.dwarf_utils import perform_stopAstroPhoto
+from dwarf_python_api.lib.dwarf_utils import perform_waitEndAstroPhoto
 from dwarf_python_api.lib.dwarf_utils import perform_GoLive
 from dwarf_python_api.lib.dwarf_utils import perform_takeWidePhoto
 from dwarf_python_api.lib.dwarf_utils import perform_takeAstroWidePhoto
 from dwarf_python_api.lib.dwarf_utils import perform_stopAstroWidePhoto
+from dwarf_python_api.lib.dwarf_utils import perform_waitEndAstroWidePhoto
 from dwarf_python_api.lib.dwarf_utils import perform_update_camera_setting
 from dwarf_python_api.lib.dwarf_utils import perform_get_all_camera_setting
 from dwarf_python_api.lib.dwarf_utils import perform_get_all_feature_camera_setting
@@ -107,15 +109,18 @@ def display_menu_camera():
     print("C4. Import Saved Config Camera Data into Dwarf")
     print("C5. Start Imaging Session")
     print("C6. Stop Imaging Session")
-    print("C7. Go Live Action")
-    print("C8. Take one Photo Only")
-    print("C9. Astro Autofocus")
-    print("C10. Astro Infinite Autofocus")
-    print("C11. Stop Astro Autofocus")
-    print("C12. Take one Wide Photo Only")
+    print("C7. Wait until End of Imaging Session")
+    print("C8. Go Live Action")
+    print("C9. Take one Photo Only")
+    print("C10. Astro Autofocus")
+    print("C11. Astro Infinite Autofocus")
+    print("C12. Stop Astro Autofocus")
+    print("C13. Take one Wide Photo Only")
+
     if dwarf_id == "3":
-        print("C13. Start Wide Imaging Session")
-        print("C14. Stop Wide Imaging Session")
+        print("C14. Start Wide Imaging Session")
+        print("C15. Stop Wide Imaging Session")
+        print("C16. Wait until End of Wide Imaging Session")
     print("0. Return")
 
 def display_menu_bluetooth():
@@ -156,7 +161,7 @@ def get_user_choice_test():
 
 def get_user_choice_camera():
     try:
-        choice = input("Enter your choice (C1 to C14) or 0 to return to main menu: ")
+        choice = input("Enter your choice (C1 to C16) or 0 to return to main menu: ")
     except KeyboardInterrupt:
         print("Operation interrupted by the user (CTRL+C).")
         choice = '0'
@@ -506,52 +511,64 @@ def option_C6():
     perform_stopAstroPhoto()
 
 def option_C7():
-    print("You selected Option C7. Go Live Action")
+    print("You selected Option C7. Wait until End of Imaging Session")
     print("")
     # Add your Option C7 functionality here
-    perform_GoLive()
+    perform_waitEndAstroPhoto()
 
 def option_C8():
-    print("You selected Option C8. Take one Photo Only")
+    print("You selected Option C8. Go Live Action")
     print("")
     # Add your Option C8 functionality here
-    perform_takePhoto()
+    perform_GoLive()
 
 def option_C9():
-    print("You selected Option C9. Astro Autofocus")
+    print("You selected Option C9. Take one Photo Only")
     print("")
-    # Add your Option C8 functionality here
-    perform_start_autofocus(False)
+    # Add your Option C9 functionality here
+    perform_takePhoto()
 
 def option_C10():
-    print("You selected Option C10. Astro Infinite Autofocus")
+    print("You selected Option C10. Astro Autofocus")
     print("")
-    # Add your Option C8 functionality here
-    perform_start_autofocus(True)
+    # Add your Option C10 functionality here
+    perform_start_autofocus(False)
 
 def option_C11():
-    print("You selected Option C11. Stop Astro Autofocus")
+    print("You selected Option C11. Astro Infinite Autofocus")
     print("")
-    # Add your Option C8 functionality here
-    perform_stop_autofocus()
+    # Add your Option C11 functionality here
+    perform_start_autofocus(True)
 
 def option_C12():
-    print("You selected Option C12, Take one Wide Photo Only")
+    print("You selected Option C12. Stop Astro Autofocus")
     print("")
     # Add your Option C12 functionality here
-    perform_takeWidePhoto()
+    perform_stop_autofocus()
 
 def option_C13():
-    print("You selected Option C13, Start Wide Imaging Session")
+    print("You selected Option C13, Take one Wide Photo Only")
     print("")
     # Add your Option C13 functionality here
-    perform_takeAstroWidePhoto()
+    perform_takeWidePhoto()
 
 def option_C14():
-    print("You selected Option C14, Stop Wide Imaging Session")
+    print("You selected Option C13, Start Wide Imaging Session")
     print("")
-    # Add your Option C8 functionality here
+    # Add your Option C14 functionality here
+    perform_takeAstroWidePhoto()
+
+def option_C15():
+    print("You selected Option C15, Stop Wide Imaging Session")
+    print("")
+    # Add your Option C15 functionality here
     perform_stopAstroWidePhoto()
+
+def option_C16():
+    print("You selected Option C16. Wait until End of Wide Imaging Session")
+    print("")
+    # Add your Option C16 functionality here
+    perform_waitEndAstroWidePhoto()
 
 def option_BC():
     print("You selected Option C. connect Bluetooth and Start STA Mode")
@@ -803,7 +820,7 @@ def input_camera_data():
     if dwarf_id == "3":
         prompt = "Enter the desired wide exposition in seconds (0 = auto - 60), use fraction for less than 1s (ex: 1/10):"
     else:
-        prompt = "Enter the desired wide exposition in seconds (0 = auto - 1), use fraction for less than 1s (ex: 1/10):"
+        prompt = "Enter the desired wide exposition in seconds (0 = auto - 1.0), use fraction for less than 1s (ex: 1/10):"
     camera_wide_exposure_init = read_camera_wide_exposure()
     camera_wide_exposure = input(f"{prompt}[{camera_wide_exposure_init}]:") if camera_wide_exposure_init else input(prompt+"[1]")
     if not camera_wide_exposure and not camera_wide_exposure_init:
@@ -836,7 +853,7 @@ def input_camera_data():
     if dwarf_id == "3":
         prompt = "Enter the desired wide gain between (0-240):"
     else:
-        prompt = "Enter the desired wide gain between (0-160):"
+        prompt = "Enter the desired wide gain between (60-160):"
     camera_wide_gain_init = read_camera_wide_gain()
     camera_wide_gain = input(f"{prompt}[{camera_wide_gain_init}]:") if camera_wide_gain_init else input(prompt+"[80]")
     if not camera_wide_gain and not camera_wide_gain_init:
@@ -849,7 +866,7 @@ def input_camera_data():
         print("Input Data Error:", camera_wide_gain)
         camera_wide_gain = "0"
         print("Set to Default:", camera_wide_gain)
-    elif dwarf_id == "2" and camera_wide_gain and (int(camera_wide_gain)<0 or int(camera_wide_gain) > 160):
+    elif dwarf_id == "2" and camera_wide_gain and (int(camera_wide_gain)<60 or int(camera_wide_gain) > 160):
         print("Input Data Error:", camera_wide_gain)
         camera_wide_gain = "60"
         print("Set to Default:", camera_wide_gain)
@@ -1295,6 +1312,12 @@ def choice_camera():
 
         elif user_choice == 'C14':
             option_C14()
+
+        elif user_choice == 'C15':
+            option_C15()
+
+        elif user_choice == 'C16':
+            option_C16()
 
         elif user_choice == '0':
             print("Return to the main menu")
