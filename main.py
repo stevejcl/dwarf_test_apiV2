@@ -58,6 +58,8 @@ from dwarf_python_api.lib.dwarf_utils import save_bluetooth_config_from_ini_file
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
 
+from dwarf_python_api.lib.dwarf_utils import perform_get_camera_setting
+
 def display_menu():
     print("")
     print("----------------------------------")
@@ -450,11 +452,13 @@ def option_C3():
             # Extract specific fields for the matching entry
            index_value = matching_entry["index"]
 
-
            camera_wide_gain = str(get_wide_gain_name_by_index(index_value,dwarf_id))
            print("the wide gain is: ", camera_wide_gain)
         else:
            print("the wide gain has not been found")
+
+    print("direct=> the wide gain is: ", perform_get_camera_setting("wide_gain"))
+    
 
 def option_C4():
     print("You selected Option C4. Import Saved Config Camera Data into Dwarf")
