@@ -43,22 +43,23 @@ from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_psd
 from dwarf_python_api.lib.dwarf_utils import read_bluetooth_autoSTA
 from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_STA_ssid
 from dwarf_python_api.lib.dwarf_utils import read_bluetooth_ble_STA_pwd
-from dwarf_python_api.lib.data_utils import get_exposure_name_by_index
-from dwarf_python_api.lib.data_utils import get_gain_name_by_index
-from dwarf_python_api.lib.data_wide_utils import get_wide_exposure_name_by_index
-from dwarf_python_api.lib.data_wide_utils import get_wide_gain_name_by_index
 from dwarf_python_api.lib.dwarf_utils import motor_action
 from dwarf_python_api.lib.dwarf_utils import perform_takePhoto
 from dwarf_python_api.lib.dwarf_utils import perform_start_autofocus
 from dwarf_python_api.lib.dwarf_utils import perform_stop_autofocus
+from dwarf_python_api.lib.dwarf_utils import start_polar_align, stop_polar_align
+from dwarf_python_api.lib.dwarf_utils import save_bluetooth_config_from_ini_file
+from dwarf_python_api.lib.dwarf_utils import perform_get_camera_setting
+
+from dwarf_python_api.lib.data_utils import get_exposure_name_by_index
+from dwarf_python_api.lib.data_utils import get_gain_name_by_index
+from dwarf_python_api.lib.data_wide_utils import get_wide_exposure_name_by_index
+from dwarf_python_api.lib.data_wide_utils import get_wide_gain_name_by_index
+
 from dwarf_python_api.get_live_data_dwarf import get_live_data
 from dwarf_python_api.get_config_data import get_config_data
-from dwarf_python_api.lib.dwarf_utils import perform_stop_autofocus
-from dwarf_python_api.lib.dwarf_utils import save_bluetooth_config_from_ini_file
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
-
-from dwarf_python_api.lib.dwarf_utils import perform_get_camera_setting
 
 def display_menu():
     print("")
@@ -143,6 +144,9 @@ def display_menu_motor():
     print("S. Turn 90° for Second Polar Align Position")
     print("RR. Option RR. Reset Rotation Axis")
     print("RS. Option RS. Reset Pitch Axis")
+    print("GP. Option GP. Read Position")
+    print("PA. Option PA. Auto Polar align")
+    print("PS. Option PS. Stop Polar align")
     print("0. Return")
 
 def get_user_choice():
@@ -637,8 +641,26 @@ def option_RR():
 def option_RS():
     print("You selected Option RS.  Reset Pitch Axis")
     print("")
-    # Add your Option MS functionality here
+    # Add your Option RS functionality here
     motor_action(6)
+
+def option_GP():
+    print("You selected Option GP.  Read Position")
+    print("")
+    # Add your Option GP functionality here
+    motor_action(8)
+
+def option_PA():
+    print("You selected Option PA.  Auto Polar align")
+    print("")
+    # Add your Option GP functionality here
+    start_polar_align()
+
+def option_PS():
+    print("You selected Option PS.  Stop Polar align")
+    print("")
+    # Add your Option GP functionality here
+    stop_polar_align()
 
 def option_20():
     print("You selected Option T1: Decoding Test Frames 1")
@@ -1376,6 +1398,15 @@ def choice_motor():
 
         elif user_choice == 'RS':
             option_RS()
+
+        elif user_choice == 'GP':
+            option_GP()
+
+        elif user_choice == 'PA':
+            option_PA()
+
+        elif user_choice == 'PS':
+            option_PS()
 
         elif user_choice == '0':
             print("Return to the main menu")
