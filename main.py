@@ -57,7 +57,7 @@ from dwarf_python_api.lib.data_wide_utils import get_wide_exposure_name_by_index
 from dwarf_python_api.lib.data_wide_utils import get_wide_gain_name_by_index
 
 from dwarf_python_api.get_live_data_dwarf import get_live_data
-from dwarf_python_api.get_config_data import get_config_data
+import dwarf_python_api.get_config_data
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
 
@@ -102,7 +102,7 @@ def display_menu_test():
     print("0. Return")
 
 def display_menu_camera():
-    data_config = get_config_data()
+    data_config = dwarf_python_api.get_config_data.get_config_data()
     dwarf_id = data_config['dwarf_id'] 
     print("")
     print("------------------")
@@ -139,12 +139,14 @@ def display_menu_motor():
     print("------------------")
     print("C. Closed Barrel Position")
     print("I. Init Horizontal Position")
+    print("I3. Init Horizontal Position for D3")
     print("P. Polar Align Position")
     print("P3. Polar Align Position For D3")
     print("S. Turn 90° for Second Polar Align Position")
+    print("S3. Turn 90° for Second Polar Align Position for D3")
     print("RR. Option RR. Reset Rotation Axis")
     print("RS. Option RS. Reset Pitch Axis")
-    print("GP. Option GP. Read Position")
+    print("GP. Option GP. Read Position (D3 only)")
     print("PA. Option PA. Auto Polar align")
     print("PS. Option PS. Stop Polar align")
     print("0. Return")
@@ -319,7 +321,7 @@ def option_C3():
     print("------------------")
 
     # get dwarf type id
-    data_config = get_config_data()
+    data_config = dwarf_python_api.get_config_data.get_config_data()
     dwarf_id = data_config['dwarf_id'] 
     print(f"Connected to Dwarf {dwarf_id}")
 
@@ -469,7 +471,7 @@ def option_C4():
     print("")
     # Add your Option C4 functionality here
     # get dwarf type id
-    data_config = get_config_data()
+    data_config = dwarf_python_api.get_config_data.get_config_data()
     dwarf_id = str(data_config['dwarf_id']) 
     print(f"Connected to Dwarf {dwarf_id}")
 
@@ -614,6 +616,12 @@ def option_MI():
     # Add your Option MI functionality here
     motor_action(2)
 
+def option_MI3():
+    print("You selected Option I. Init Horizontal Position for D3")
+    print("")
+    # Add your Option MI functionality here
+    motor_action(9)
+
 def option_MP():
     print("You selected Option P. Polar Align Position")
     print("")
@@ -631,6 +639,12 @@ def option_MS():
     print("")
     # Add your Option MS functionality here
     motor_action(4)
+
+def option_MS3():
+    print("You selected Option S. Turn 90° for Second Polar Align Position for D3")
+    print("")
+    # Add your Option MS functionality here
+    motor_action(4,0.5)
 
 def option_RR():
     print("You selected Option RR. Reset Rotation Axis")
@@ -737,7 +751,7 @@ def validate_input(input_str, min, max):
 
 def input_camera_data():
     # get dwarf type id
-    data_config = get_config_data()
+    data_config = dwarf_python_api.get_config_data.get_config_data()
     dwarf_id = data_config['dwarf_id'] 
     print(f"connected to Dwarf {dwarf_id}")
     if dwarf_id == "3":
@@ -1384,6 +1398,9 @@ def choice_motor():
         elif user_choice == 'I':
             option_MI()
 
+        elif user_choice == 'I3':
+            option_MI3()
+
         elif user_choice == 'P':
             option_MP()
 
@@ -1392,6 +1409,9 @@ def choice_motor():
 
         elif user_choice == 'S':
             option_MS()
+
+        elif user_choice == 'S3':
+            option_MS3()
 
         elif user_choice == 'RR':
             option_RR()
