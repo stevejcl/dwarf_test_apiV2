@@ -60,6 +60,7 @@ from dwarf_python_api.get_live_data_dwarf import get_live_data
 import dwarf_python_api.get_config_data
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
+from dwarf_ble_connect.lib.connect_direct_bluetooth import connect_ble_direct_dwarf, connect_ble_dwarf_win
 
 def display_menu():
     print("")
@@ -129,7 +130,9 @@ def display_menu_camera():
 def display_menu_bluetooth():
     print("")
     print("------------------")
-    print("C. connect Bluetooth and Start STA Mode")
+    print("C. connect Bluetooth and Start STA Mode with Browser")
+    print("CD. connect Bluetooth and Start STA Mode with Python")
+    print("CW. connect Bluetooth and Start STA Mode with Windows")
     print("R. Read Bluetooth Param Config Information")
     print("S. Save Bluetooth Param Config Information and for Connection")
     print("0. Return")
@@ -177,7 +180,7 @@ def get_user_choice_camera():
 
 def get_user_choice_bluetooth():
     try:
-        choice = input("Enter your choice C,R,S or 0 to return to main menu: ")
+        choice = input("Enter your choice C,CD,CW,R,S or 0 to return to main menu: ")
     except KeyboardInterrupt:
         print("Operation interrupted by the user (CTRL+C).")
         choice = '0'
@@ -585,6 +588,38 @@ def option_BC():
     print("")
     # Add your Option BC functionality here
     if (connect_bluetooth()):
+        
+        #init Frame : TIME and TIMZONE
+        result = perform_time()
+       
+        if result:
+           perform_timezone()
+
+def option_BCD():
+    print("You selected Option CD. connect Bluetooth and Start STA Mode with Python")
+    print("")
+    # Add your Option BCD functionality here
+    ble_psd = read_bluetooth_ble_psd() or "DWARF_12345678" 
+    ble_STA_ssid = read_bluetooth_ble_STA_ssid() or ""
+    ble_STA_pwd = read_bluetooth_ble_STA_pwd() or ""
+
+    if (connect_ble_direct_dwarf(ble_psd, ble_STA_ssid, ble_STA_pwd)):
+        
+        #init Frame : TIME and TIMZONE
+        result = perform_time()
+       
+        if result:
+           perform_timezone()
+
+def option_BCW():
+    print("You selected Option CW. connect Bluetooth and Start STA Mode with Windows")
+    print("")
+    # Add your Option BCW functionality here
+    ble_psd = read_bluetooth_ble_psd() or "DWARF_12345678" 
+    ble_STA_ssid = read_bluetooth_ble_STA_ssid() or ""
+    ble_STA_pwd = read_bluetooth_ble_STA_pwd() or ""
+
+    if (connect_ble_dwarf_win(ble_psd, ble_STA_ssid, ble_STA_pwd)):
         
         #init Frame : TIME and TIMZONE
         result = perform_time()
@@ -1373,6 +1408,12 @@ def choice_bluetooth():
 
         if user_choice == 'C':
             option_BC()
+
+        elif user_choice == 'CD':
+            option_BCD()
+
+        elif user_choice == 'CW':
+            option_BCW()
 
         elif user_choice == 'R':
             option_BR()
