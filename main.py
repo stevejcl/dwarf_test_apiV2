@@ -61,6 +61,7 @@ import dwarf_python_api.get_config_data
 
 from dwarf_ble_connect.connect_bluetooth import connect_bluetooth
 from dwarf_ble_connect.lib.connect_direct_bluetooth import connect_ble_direct_dwarf, connect_ble_dwarf_win
+from dwarf_python_api.lib.websockets_utils import get_client_status
 
 def display_menu():
     print("")
@@ -89,6 +90,7 @@ def display_menu():
     print("D. Force Disconnection")
     print("L. Get Live Data Function")
     print("M. Motor Function")
+    print("S. Show Status data")
     print("T. Test Frames Decoding")
     print("0. Exit")
 
@@ -156,7 +158,7 @@ def display_menu_motor():
 
 def get_user_choice():
     try:
-        choice = input("Enter your choice (1-12) or (B,C,D,L,M,T) or 0 to exit: ")
+        choice = input("Enter your choice (1-12) or (B,C,D,L,M,S,T) or 0 to exit: ")
     except KeyboardInterrupt:
         print("Operation interrupted by the user (CTRL+C).")
         choice = '0'
@@ -286,6 +288,13 @@ def option_L():
 def option_M():
     print("You selected Option M: Motor Functions")
     choice_motor()
+    # Add your Option M functionality here
+
+def option_S():
+    import json
+    print("You selected Option S: Status Data")
+    status = get_client_status()
+    print(json.dumps(status, indent=4))
     # Add your Option M functionality here
 
 def option_T():
@@ -602,8 +611,10 @@ def option_BCD():
     ble_psd = read_bluetooth_ble_psd() or "DWARF_12345678" 
     ble_STA_ssid = read_bluetooth_ble_STA_ssid() or ""
     ble_STA_pwd = read_bluetooth_ble_STA_pwd() or ""
+    # Test Auto Select
+    auto_select = 0 # "DWARF3_3AD246"
 
-    if (connect_ble_direct_dwarf(ble_psd, ble_STA_ssid, ble_STA_pwd)):
+    if (connect_ble_direct_dwarf(ble_psd, ble_STA_ssid, ble_STA_pwd,auto_select)):
         
         #init Frame : TIME and TIMZONE
         result = perform_time()
@@ -1535,6 +1546,9 @@ def main():
 
         elif user_choice == 'M':
             option_M()
+
+        elif user_choice == 'S':
+            option_S()
 
         elif user_choice == 'T':
             option_T()
