@@ -46,13 +46,6 @@ if __name__ == "__main__":
             elif sys.argv[i] == "--web":
                 win = False
                 cmd = False
-            elif sys.argv[i] == "--config":
-                if i + 1 < len(sys.argv):
-                    ble_psd = sys.argv[i + 1]
-                    i += 1
-                else:
-                    print("Error: --psd parameter requires an argument.")
-                    sys.exit(1)
             elif sys.argv[i] == "--psd":
                 if i + 1 < len(sys.argv):
                     ble_psd = sys.argv[i + 1]
