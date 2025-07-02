@@ -612,7 +612,7 @@ def option_BCD():
     ble_STA_ssid = read_bluetooth_ble_STA_ssid() or ""
     ble_STA_pwd = read_bluetooth_ble_STA_pwd() or ""
     # Test Auto Select
-    auto_select = 0 # "DWARF3_3AD246"
+    auto_select = "" # "DWARF3_3AD246" or 0 to give the list and "" to connect to the first after 10 s
 
     if (connect_ble_direct_dwarf(ble_psd, ble_STA_ssid, ble_STA_pwd,auto_select)):
         
