@@ -1,5 +1,5 @@
 # dwarf_test_apiV2
-Dwarf II, test program for Api V2.0 in python
+Dwarf II and Dwarf 3, test program for Api V2.0 in python
 
 This test program permits to send frames to the dwarfII telescope.
 
@@ -13,8 +13,9 @@ The frames that can be tested are :
 - Do a goto to a solar system target : Jupiter
 - Do manual target
 - Change the parameters of you tele lens
-- Take Tele photo
-- Download last image or previous one
+- Take Tele photo, Wide Photo
+- Download last image or previous one or history one (Tele and Wide)
+- Download list of Wide or Tele photos present on the Dwarf.
 - Start a imaging session
 - Download images from last session
 - Even do a Siril live integration with the current imaging session
