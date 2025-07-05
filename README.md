@@ -36,3 +36,48 @@ Installation
    Don't miss the dot at the end of the line
 
 Then you can start it with => python .\main.py
+
+Cloud detector funcion : WIP
+this script take a wide image each 30s and compare them to detect if clous are coming
+
+Install :
+
+     python -m pip install -r requirements-cloud.txt
+     python -m pip install -r requirements-local.txt --target .
+
+then launch the script with: python .\detect_cloud.py
+
+How to use: 
+a menu is diplaying
+----------------------------------
+    Detect Cloud application,
+    Connect first to the Dwarf
+----------------------------------
+C. Connect Dwarf
+S. Show Status data
+D. Force Disconnection
+----------------------------------
+    Detect Cloud application
+----------------------------------
+GO. Start Cloud detection
+CTRL+C. Stop Cloud detection
+----------------------------------
+           CONFIG Command
+----------------------------------
+BR. Read Bluetooth Param Config Information
+BS. Save Bluetooth Param Config Information and for Connection
+C1. Read Saved Config Camera Data
+C2. Input Camera Data to Config
+C3. Read Current Dwarf Camera Data
+C4. Import Saved Config Camera Data into Dwarf
+U. Unset HOST MASTER
+L. Go Live Action
+0. Exit
+
+Type : C to detect and connect your dwarf, then go
+
+Maybe a problem can occurs, the script uses ftp to download the image file, it shows the IP it uses.
+if the IP is not the same as the one diplayed after connection, you can update the config.ini file.
+
+Update the last line : ftp_host = 192.168.x.x by yours
+This will be corrected later
