@@ -27,8 +27,10 @@ Installation
 
 2. Then Install the dwarf_python_api library with :
   
-     python -m pip install -r requirements.txt
-     python -m pip install -r requirements-local.txt --target .
+Install :
+
+      python -m pip install -r requirements.txt
+      python -m pip install -r requirements-local.txt --target .
 
    This project uses the dwarf_python_api library that must be installed locally in the root path of this project
    with using the parameter --target .
@@ -42,8 +44,8 @@ this script take a wide image each 30s and compare them to detect if clous are c
 
 Install :
 
-     python -m pip install -r requirements-cloud.txt
-     python -m pip install -r requirements-local.txt --target .
+      python -m pip install -r requirements-cloud.txt
+      python -m pip install -r requirements-local.txt --target .
 
 then launch the script with: python .\detect_cloud.py
 
