@@ -106,7 +106,7 @@ def display_menu_test():
 
 def display_menu_camera():
     data_config = dwarf_python_api.get_config_data.get_config_data()
-    dwarf_id = data_config['dwarf_id'] 
+    dwarf_id = str(data_config['dwarf_id'])
     print("")
     print("------------------")
     print("C1. Read Saved Config Camera Data")
@@ -123,7 +123,7 @@ def display_menu_camera():
     print("C12. Stop Astro Autofocus")
     print("C13. Take one Wide Photo Only")
 
-    if dwarf_id == "3":
+    if dwarf_id == "2":
         print("C14. Start Wide Imaging Session")
         print("C15. Stop Wide Imaging Session")
         print("C16. Wait until End of Wide Imaging Session")
@@ -334,8 +334,8 @@ def option_C3():
 
     # get dwarf type id
     data_config = dwarf_python_api.get_config_data.get_config_data()
-    dwarf_id = data_config['dwarf_id'] 
-    print(f"Connected to Dwarf {dwarf_id}")
+    dwarf_id = str(data_config['dwarf_id'])
+    print(f"Connected to Dwarf {int(dwarf_id)+1}")
 
     # ALL PARAMS
     if (result and not isinstance(result,int)):
@@ -380,10 +380,18 @@ def option_C3():
             # Extract specific fields for the matching entry
             camera_IR = str(matching_entry["index"])
 
-            if (camera_IR == "0"):
-                print("the IR value is: IRCut")
-            else:
-                print("the IR value is: IRPass")
+            if dwarf_id == "1":
+                if (camera_IR == "0") :
+                    print("the IR value is: IRCut")
+                else:
+                    print("the IR value is: IRPass")
+            else :
+                if (camera_IR == "0") :
+                    print("the IR value is: VIS")
+                elif (camera_IR == "1") :
+                    print("the IR value is: ASTRO")
+                else:
+                    print("the IR value is: DUAL-BAND")
         else:
            print("the IRfilter has not been found")
     else:
@@ -475,7 +483,8 @@ def option_C3():
         else:
            print("the wide gain has not been found")
 
-    print("direct=> the wide gain is: ", perform_get_camera_setting("wide_gain"))
+    # error no response on D3
+    # print("direct=> the wide gain is: ", perform_get_camera_setting("wide_gain"))
     
 
 def option_C4():
@@ -798,9 +807,9 @@ def validate_input(input_str, min, max):
 def input_camera_data():
     # get dwarf type id
     data_config = dwarf_python_api.get_config_data.get_config_data()
-    dwarf_id = data_config['dwarf_id'] 
+    dwarf_id = str(data_config['dwarf_id'])
     print(f"connected to Dwarf {dwarf_id}")
-    if dwarf_id == "3":
+    if dwarf_id == "2":
         prompt = "Enter the desired exposition in seconds (0 = auto - 60), use fraction for less than 1s (ex: 1/10):"
     else:
         prompt = "Enter the desired exposition in seconds (0 = auto - 15), use fraction for less than 1s (ex: 1/10):"
@@ -809,21 +818,21 @@ def input_camera_data():
     if not camera_exposure and not camera_exposure_init:
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
-    elif dwarf_id == "2" and camera_exposure and not validate_input(camera_exposure, 0, 15):
+    elif dwarf_id == "1" and camera_exposure and not validate_input(camera_exposure, 0, 15):
         print("Input Data Error:", camera_exposure)
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
-    elif dwarf_id == "3" and camera_exposure and not validate_input(camera_exposure, 0, 60):
+    elif dwarf_id == "2" and camera_exposure and not validate_input(camera_exposure, 0, 60):
         print("Input Data Error:", camera_exposure)
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
     elif (camera_exposure):
         print("You entered:", camera_exposure)
-    elif dwarf_id == "2" and camera_exposure_init and not validate_input(camera_exposure_init, 0, 15):
+    elif dwarf_id == "1" and camera_exposure_init and not validate_input(camera_exposure_init, 0, 15):
         print("Input Data Error:", camera_exposure_init)
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
-    elif dwarf_id == "3" and camera_exposure_init and not validate_input(camera_exposure_init, 0, 60):
+    elif dwarf_id == "2" and camera_exposure_init and not validate_input(camera_exposure_init, 0, 60):
         print("Input Data Error:", camera_exposure_init)
         camera_exposure = "1"
         print("Set to Default:", camera_exposure)
@@ -852,15 +861,25 @@ def input_camera_data():
         print("No value entered:")
 
     camera_IR_init = read_camera_IR()
-    prompt = "Enter the desired IR value: 0 for IRCut, 1 for IRPass:"
+    if dwarf_id == "1":
+        prompt = "Enter the desired IR value: 0 for IRCut, 1 for IRPass:"
+    else:
+        prompt = "Enter the desired IR value: 0 for VIS, 1 for ASTRO, 2 for DUAL-BAND:"
     camera_IR = input(f"{prompt}[{camera_IR_init}]:") if camera_IR_init else input(prompt+"[IRCut]")
     if not camera_IR and not camera_IR_init:
         camera_IR = "0"
-        print("Set to Default (IRCut):", camera_IR)
-    elif camera_IR and (camera_IR!="0" and camera_IR !="1"):
+        if dwarf_id == "1":
+            print("Set to Default (IRCut):", camera_IR)
+        else:
+            print("Set to Default (VIS):", camera_IR)
+    elif camera_IR and (camera_IR!="0" and camera_IR !="1" and dwarf_id == "1"):
         print("Input Data Error:", camera_IR)
         camera_IR = "0"
         print("Set to Default (IRCut):", camera_IR)
+    elif camera_IR and (camera_IR!="0" and camera_IR !="1" and camera_IR !="2" and dwarf_id == "2"):
+        print("Input Data Error:", camera_IR)
+        camera_IR = "0"
+        print("Set to Default (VIS):", camera_IR)
     else:
         print("You entered:", camera_IR)
 
@@ -903,7 +922,7 @@ def input_camera_data():
     else:
         print("You entered:", camera_count)
 
-    if dwarf_id == "3":
+    if dwarf_id == "2":
         prompt = "Enter the desired wide exposition in seconds (0 = auto - 60), use fraction for less than 1s (ex: 1/10):"
     else:
         prompt = "Enter the desired wide exposition in seconds (0 = auto - 1.0), use fraction for less than 1s (ex: 1/10):"
@@ -912,21 +931,21 @@ def input_camera_data():
     if not camera_wide_exposure and not camera_wide_exposure_init:
         camera_wide_exposure = "1"
         print("Set to Default:", camera_wide_exposure)
-    elif dwarf_id == "2" and camera_wide_exposure and not validate_input(camera_wide_exposure, 0, 15):
+    elif dwarf_id == "1" and camera_wide_exposure and not validate_input(camera_wide_exposure, 0, 15):
         print("Input Data Error:", camera_wide_exposure)
         camera_wide_exposure = "1"
         print("Set to Default:", camera_wide_exposure)
-    elif dwarf_id == "3" and camera_wide_exposure and not validate_input(camera_wide_exposure, 0, 60):
+    elif dwarf_id == "2" and camera_wide_exposure and not validate_input(camera_wide_exposure, 0, 60):
         print("Input Data Error:", camera_wide_exposure)
         camera_wide_exposure = "1"
         print("Set to Default:", camera_wide_exposure)
     elif (camera_wide_exposure):
         print("You entered:", camera_wide_exposure)
-    elif dwarf_id == "2" and camera_wide_exposure_init and not validate_input(camera_wide_exposure_init, 0, 15):
+    elif dwarf_id == "1" and camera_wide_exposure_init and not validate_input(camera_wide_exposure_init, 0, 15):
         print("Input Data Error:", camera_wide_exposure)
         camera_wide_exposure = "1"
         print("Set to Default:", camera_wide_exposure)
-    elif dwarf_id == "3" and camera_wide_exposure_init and not validate_input(camera_wide_exposure_init, 0, 60):
+    elif dwarf_id == "2" and camera_wide_exposure_init and not validate_input(camera_wide_exposure_init, 0, 60):
         print("Input Data Error:", camera_wide_exposure_init)
         camera_wide_exposure = "1"
         print("Set to Default:", camera_wide_exposure)
@@ -936,23 +955,23 @@ def input_camera_data():
     else:
         print("No value entered:")
 
-    if dwarf_id == "3":
+    if dwarf_id == "2":
         prompt = "Enter the desired wide gain between (0-240):"
     else:
         prompt = "Enter the desired wide gain between (60-160):"
     camera_wide_gain_init = read_camera_wide_gain()
     camera_wide_gain = input(f"{prompt}[{camera_wide_gain_init}]:") if camera_wide_gain_init else input(prompt+"[80]")
     if not camera_wide_gain and not camera_wide_gain_init:
-        if dwarf_id == "3":
+        if dwarf_id == "2":
             camera_wide_gain = "0"
         else:
             camera_wide_gain = "60"
         print("Set to Default:", camera_wide_gain)
-    elif dwarf_id == "3" and camera_wide_gain and (int(camera_wide_gain)<0 or int(camera_wide_gain) > 240):
+    elif dwarf_id == "2" and camera_wide_gain and (int(camera_wide_gain)<0 or int(camera_wide_gain) > 240):
         print("Input Data Error:", camera_wide_gain)
         camera_wide_gain = "0"
         print("Set to Default:", camera_wide_gain)
-    elif dwarf_id == "2" and camera_wide_gain and (int(camera_wide_gain)<60 or int(camera_wide_gain) > 160):
+    elif dwarf_id == "1" and camera_wide_gain and (int(camera_wide_gain)<60 or int(camera_wide_gain) > 160):
         print("Input Data Error:", camera_wide_gain)
         camera_wide_gain = "60"
         print("Set to Default:", camera_wide_gain)
@@ -969,15 +988,25 @@ def input_camera_data():
 def read_camera_data():
     print("The values in the Config File are : ")
     print("-----------------------------------")
+    data_config = dwarf_python_api.get_config_data.get_config_data()
+    dwarf_id = str(data_config['dwarf_id'])
     if (camera_exposure := read_camera_exposure()):
         print("the exposition is: ", camera_exposure)
     if (camera_gain := read_camera_gain()):
         print("the gain is:", camera_gain)
     if (camera_IR := read_camera_IR()):
-        if (camera_IR == "0"):
-            print("the IR value is: IRCut")
+        if dwarf_id == "1":
+            if (camera_IR == "0") :
+                print("the IR value is: IRCut")
+            else:
+                print("the IR value is: IRPass")
         else:
-            print("the IR value is: IRPass")
+            if (camera_IR == "0") :
+                print("the IR value is: VIS")
+            elif (camera_IR == "1") :
+                print("the IR value is: ASTRO")
+            else:
+                print("the IR value is: DUAL-BAND")
     if (camera_binning := read_camera_binning()):
         if (camera_binning == "0"):
             print("the Binning value is 4k")
@@ -1327,7 +1356,7 @@ def perform_goto_target(target):
 def choice_test():
     while True:
         display_menu_test()
-        user_choice = get_user_choice_test()
+        user_choice = get_user_choice_test().upper()
 
         if user_choice == 'T1':
             option_20()
@@ -1355,7 +1384,7 @@ def choice_test():
 def choice_camera():
     while True:
         display_menu_camera()
-        user_choice = get_user_choice_camera()
+        user_choice = get_user_choice_camera().upper()
 
         if user_choice == 'C1':
             option_C1()
@@ -1415,7 +1444,7 @@ def choice_camera():
 def choice_bluetooth():
     while True:
         display_menu_bluetooth()
-        user_choice = get_user_choice_bluetooth()
+        user_choice = get_user_choice_bluetooth().upper()
 
         if user_choice == 'C':
             option_BC()
@@ -1442,7 +1471,7 @@ def choice_bluetooth():
 def choice_motor():
     while True:
         display_menu_motor()
-        user_choice = get_user_choice_motor()
+        user_choice = get_user_choice_motor().upper()
 
         if user_choice == 'C':
             option_MC()
@@ -1491,7 +1520,7 @@ def main():
     while True:
         display_menu()
         try:
-            user_choice = get_user_choice()
+            user_choice = get_user_choice().upper()
         except KeyboardInterrupt:
             my_logger.warning("Operation interrupted by the user (CTRL+C).")
             user_choice = '0'
